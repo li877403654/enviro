@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!--
+    @author zzl
+    @version 1.0 Sep 19, 2017
+-->
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="envir.sys.entity.RelRoleEntry">
+
+    <select id="listRoleEntryIds" parameterType="Integer" resultType="Integer">
+        select entry_id from rel_role_entry where role_id = #{value}
+    </select>
+
+</mapper>

@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html>
+<head lang="en">
+	<meta charset="UTF-8">
+	<title></title>
+	<link href="css/app.css" rel="stylesheet"/>
+	<link href="css/layout/global.css" rel="stylesheet"/>
+	<link href="css/index/indexSub.css" rel="stylesheet"/>
+	<link href="css/index/gisMap.css" rel="stylesheet"/>
+	<link href="css/layout/pagination.css" rel="stylesheet"/>
+	<script type="text/javascript" src="js/app.js"></script>
+	<script type="text/javascript" src="js/session.js"></script>
+	<script type="text/javascript" src="layui/layui.js"></script>
+	<script type="text/javascript" src="js/lib/jquery-3.3.1.min.js"></script>
+	<script type="text/javascript" src="js/pub/app.js"></script>
+	<script type="text/javascript" src="js/pub/pub.js"></script>
+	<script type="text/javascript" src="js/common/common.js"></script>
+	<script type="text/javascript" src="js/backservice.js"></script>
+	<script type="text/javascript" src="js/pagination.js"></script>
+</head>
+<body>
+<div class="nav-pane">
+	<div class="query-pane">
+			<div class="field" style="flex: 1">
+				<!--label>信息类编码</label-->
+				<input placeholder="佛山" id="companyName"/>
+			</div>
+			<div class="op" style="flex: 1;padding-bottom:25px;text-align: left;">
+				<button id="submit">查询</button>
+			</div>
+	</div>
+	<div class="grid">
+		<table>
+			<thead>
+			<tr>
+				<th>序号</th>
+				<th>企业名称</th>
+			</tr>
+			</thead>
+			<tbody id="company">
+
+			</tbody>
+		</table>
+	</div>
+	<div class="pagination"></div>
+	<script>
+		$(document).ready(function () {
+			backService.get("/environmentCredit/pollutionbyname.json", {
+				pollutionName:"",
+				pageNum:1
+			}, function (res) {
+				//console.log("res:"+res);
+				var dbDate=res;
+				/**分页**/
+				$(".pagination").createPage({
+					pageCount:dbDate.data.hashMap.count,
+					current:1,
+					backFn:function(p){
+						getTabData("",p);
+					}
+				});
+			}, function () {
+			});
+		});
+	</script>
+</div>
+<div class="splitter"><div class="handler"></div></div>
+<div class="workarea">
+	<form>
+		<input type="hidden" id="x" value="112.90467719326922" />
+		<input type="hidden" id="y" value="23.294580845554856" />
+		<input type="hidden" id="id" value="1" />
+		<input type="hidden" id="enterpriseName" value="青岛啤酒（三水）有限公司" />
+	</form>
+	<iframe id="mapIframe" src="gisMapById.html" width="100%" height="100%"></iframe>
+</div>
+</body>
+<script>
+	var count=0;
+	$(document).ready(function () {
+		$("#companyName").blur(function(){
+			var value=$(this).val();
+			getPageTotal(value,1);
+		});
+		$("#submit").click(function(){
+			$(".pagination").empty();
+			var val=$("#companyName").val();
+			getTabData(val,1);
+			$(".pagination").createPage({
+				pageCount:getPageTotal(val,1),
+				current:1,
+				backFn:function(p){
+					getTabData(val,p);
+				}
+			});
+		});
+		getTabData("",1);
+		$("body").on("click","tr td.getMap",function(){
+			var id=$(this).attr("data-id");
+			var x=$(this).attr("data-x");
+			var y=$(this).attr("data-y");
+			var enterpriseName=$(this).text();
+			$("#x").val(x);
+			$("#y").val(y);
+			$("#enterpriseName").val(enterpriseName);
+			$("#id").val(id);
+			document.getElementById('mapIframe').src=document.getElementById('mapIframe').src;
+		});
+	});
+	//获取企业列表数据
+	function getTabData(name,pageNo){
+		backService.get("/environmentCredit/pollutionbyname.json", {
+				pollutionName:name,
+				pageNum:pageNo
+		}, function (res) {
+			var dbDate=res;
+			var list=dbDate.data.hashMap.polluSourCtros;
+			var html="";
+			for(var i=0;i<list.length;i++){
+				html+="<tr><td>"+(i+1)+"</td>";
+				var enterpriseName=list[i].enterpriseName;
+				var title="";
+				if(enterpriseName.length>17){
+					enterpriseName=enterpriseName.substring(0,17)+"...";
+					title=list[i].enterpriseName;
+				}
+				html+="<td class='getMap' title='"+title+"' data-id='"+list[i].id+"' data-x='"+list[i].x+"' data-y='"+list[i].y+"' >"+
+						enterpriseName+"</td>";
+				html+="</tr>";
+			}
+			
+			$("#company").html(html);
+		}, function () {
+		});
+	}
+	function getPageTotal(name,pageNo){
+		backService.get("/environmentCredit/pollutionbyname.json", {
+			pollutionName:name,
+			pageNum:pageNo
+		}, function (res) {
+			console.log("res:"+res);
+			var dbDate=res;
+			//console.log("num:"+dbDate.data.hashMap.count);
+			count=dbDate.data.hashMap.count
+		}, function () {
+			count=0;
+		});
+		return count;
+	}
+</script>
+</html>

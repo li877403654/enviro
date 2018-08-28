@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Configuration status="trace" strict="true" packages="pub.logging">
+    <Properties>
+        <Property name="filename">envir-app-server.log</Property>
+    </Properties>
+
+    <Appenders>
+        <Appender type="Console" name="STDOUT">
+            <Layout type="PatternLayout" pattern="%-5p [%t][%d{COMPACT}]: %m%n"/>
+        </Appender>
+        <Appender type="File" name="File" fileName="${filename}">
+            <Layout type="PatternLayout">
+                <Pattern>%d %p %C{1.} [%t] %m%n</Pattern>
+            </Layout>
+        </Appender>
+    </Appenders>
+
+    <Loggers>
+        <Logger name="com.jolbox.bonecp.PreparedStatementHandle" level="debug" additivity="false">
+            <AppenderRef ref="STDOUT"/>
+            <SuppressibleFilter/>
+        </Logger>
+        <Logger name="com.jolbox.bonecp.ConnectionHandle" level="debug" additivity="false">
+            <AppenderRef ref="STDOUT"/>
+            <SuppressibleFilter/>
+        </Logger>
+        <Logger name="com.jolbox.bonecp.StatementHandle" level="debug" additivity="false">
+            <AppenderRef ref="STDOUT"/>
+            <SuppressibleFilter/>
+        </Logger>
+
+        <Logger name="envir.web.app.filter.UrlFilter" level="debug" additivity="false">
+            <AppenderRef ref="STDOUT"/>
+            <SuppressibleFilter/>
+        </Logger>
+
+        <Root level="info">
+            <AppenderRef ref="STDOUT"/>
+        </Root>
+    </Loggers>
+
+</Configuration>

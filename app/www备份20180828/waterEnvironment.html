@@ -1,0 +1,504 @@
+<!DOCTYPE html>
+<html>
+<head lang="en">
+	<meta charset="UTF-8">
+	<title></title>
+	<link href="css/layout/global.css" rel="stylesheet"/>
+	<link href="css/index/indexSub.css" rel="stylesheet"/>
+	<link href="css/index/waterEnvironment.css" rel="stylesheet"/>
+	<script type="text/javascript" src="js/app.js"></script>
+	<script type="text/javascript" src="js/session.js"></script>
+	<script type="text/javascript" src="js/lib/jquery-3.3.1.min.js"></script>
+	<script type="text/javascript" src="js/common/common.js"></script>
+	<script type="text/javascript" src="js/backservice.js"></script>
+	<script type="text/javascript" src="js/index/echarts.js"></script>
+	<script type="text/javascript" src="js/index/echarts-wordcloud.js"></script>
+	<script type="text/javascript" src="js/index.js"></script>
+	<script type="text/javascript" src="js/public.js"></script>
+</head>
+
+<body>
+<div class="workarea">
+	<div class="viewarea">
+		<div class="view-panel b wdyn">
+			<p class="label">水动态</p>
+			<div class="dynamic-panel">
+				<div class="dynamic-item" style="padding-top: 10px;">
+					<div class="dyn-pic">
+						<img  src="images/w-yysyd.png" >
+					</div>
+					<div class="dyn-pic">
+						<img src="images/w-gsc.png" >
+					</div>
+					<div class="dyn-pic">
+						<img src="images/w-wsclc.png">
+					</div>
+				</div>
+				<div class="dynamic-item">
+					<div>
+						<p class="txt t-one">污水处理厂</p>
+						<p class="number"><span id="wsclc">12</span>家</p>
+					</div>
+					<div>
+						<p class="txt t-two">供水厂</p>
+						<p class="number"><span id="gsc">12</span>家</p>
+					</div>
+					<div>
+						<p class="txt t-three">饮用水源地</p>
+						<p class="number"><span id="yysyd">12</span>家</p>
+					</div>
+				</div>
+			</div>
+		</div>
+		<div class="view-panel b en">
+			<p class="label">环境质量分析</p>
+			<div style="flex: 1;" id="environmentalQuality">
+			</div>
+		</div>
+		<div class="view-panel b areaw" style="">
+			<p class="label">各区供水量</p>
+			<h6 class="remind" id="gsl"></h6>
+			<div style="flex: 1;" id="waterSupply">
+
+			</div>
+		</div>
+	</div>
+	<!--地图-->
+
+	<div id="map" class="maparea">
+
+		<div id="hintInfoFrame">
+			<p> &nbsp;注:地图为市的水源</p >
+			<p> &nbsp;情况分析</p >
+			<table>
+				<tr>
+					<td>
+						<img src="images/gsc_min.png" />
+					</td>
+					<td> 供水厂</td>
+					<td>
+						<img src="images/wsc_min.png" />
+					</td>
+					<td> 污水处理厂</td>
+				</tr>
+				<tr>
+					<td>
+						<img src="images/syd_min.png" />
+					</td>
+					<td> 饮用水原地</td>
+					<td></td>
+					<td></td>
+				</tr>
+			</table>
+		</div>
+		<div class="map-sub"></div>
+		<div class="map-panel">
+			<iframe src="gisWater.html" width="100%" height="100%"></iframe>
+		</div>
+	</div>
+	<div class="viewarea">
+		<div class="view-panel b cityw">
+			<p class="label">全市水质区域汇总</p>
+			<div style="flex: 1;margin-right: 15px" id="waterAreaTotal">
+			</div>
+		</div>
+		<!--div class="view-panel rb" style="flex: 2;display:flex;flex-direction:column;">
+			<p class="label">降水量预测及实况</p>
+			<h5 style="text-align: center;margin-top:15px;margin-bottom:15px">佛山市2018年08月平均降水预测</h5>
+			<div class="" style="flex:2;" id="precipitation">
+
+			</div>
+		</div-->
+		<div class="view-panel rb yc">
+			<p class="label">降水量预测及实况</p>
+			<h5 style="text-align: center;margin-top:15px;margin-bottom:15px">佛山市<span id="skrq"></span>平均降水预测</h5>
+			<div class="" style="flex:2;" id="precipitation">
+
+			</div>
+		</div>
+	</div>
+</div>
+</body>
+<script>
+$(document).ready(function () {
+	$("#gsl").html(initLabelDate());
+	$("#skrq").html(initTitleDate());
+	readWaterDynamicData();
+	lineChartQuality();
+	readWaterSupplyData();
+	readWaterAreaTotalEchart();
+	readPrecipitation();
+});
+
+
+/**全市水质区域汇总**/
+function readWaterAreaTotalEchart() {
+	//初始化echarts实例
+	var myChart = echarts.init(document.getElementById('waterAreaTotal'));
+	//使用制定的配置项和数据显示图表
+	backService.get("/environmentCredit/watertypecount.json", {
+	}, function (res) {
+		var dbData=res.data.linkedCaseInsensitiveMapList;
+		var showData=[];
+		var typeArr=[];
+		for(var i=0;i<dbData.length;i++){
+			var obj={value:dbData[i].count,name:dbData[i].type};
+			showData.push(obj);
+			typeArr.push(dbData[i].type);
+		}
+		var option = {
+			tooltip : {
+				trigger: 'item',
+				formatter: "{a} <br/>{b} : {c} ({d}%)"
+			},
+			legend: {
+				orient: 'vertical',
+				left: 'right',
+				data:typeArr,
+				textStyle:{
+					color:"#01CEEE"
+				}
+			},
+			series : [
+				{
+					name: '占比',
+					type: 'pie',
+					radius : '55%',
+					center: ['50%', '50%'],
+					data:showData,
+					itemStyle: {
+						emphasis: {
+							shadowBlur: 10,
+							shadowOffsetX: 0,
+							shadowColor: 'rgba(0, 0, 0, 0.5)'
+						}
+					}
+				}
+			]
+		};
+		myChart.setOption(option);
+	}, function () {
+	});
+}
+/**水动态**/
+function readWaterDynamicData(){
+	backService.get("/environmentCredit/waterpointcount.json", {
+	}, function (res) {
+		var dbData=res.data.hashMap;
+		$.each(dbData,function(k,v){
+			console.log(v);
+			if(k==1){
+				$("#wsclc").html(v);
+			}else if(k==2){
+				$("#gsc").html(v);
+			}else if(k==3){
+				$("#yysyd").html(v);
+			}
+		});
+	}, function () {
+
+	});
+}
+
+/**降水量预测及实况**/
+function readPrecipitation(){
+	//初始化echarts实例
+	var myChart2= echarts.init(document.getElementById('precipitation'));
+	var option = {
+		legend: {
+			data: ['实况', '预测'],
+			textStyle: {
+				color: '#02A2E9'          //legend字体颜色
+			}
+		},
+		axisLabel: {
+			color: "#ff0" //刻度线标签颜色
+		},
+		tooltip: {
+			formatter: "{c}mm",
+		},
+		xAxis: [
+			{
+				type: 'category',
+				axisTick: {show: false},
+				data: ['6月上旬', '6月中旬', '6月中旬', '7月上旬',
+					'7月中旬', '7月中旬','8月上旬', '8月中旬', '8月中旬']
+			}
+		],
+		yAxis: [
+			{
+				type: 'value'
+			}
+		],
+		series: [
+			{
+				name: '实况',
+				type: 'bar',
+				barGap: 0,
+				data: [43.3, 83.1, 86.4, 13.3, 73.1,96.4, 53.3,73.1,76.4]
+			},
+			{
+				name: '预测',
+				type: 'bar',
+				data: [ 85.8, 73.4, 65.2, 75.8, 63.4,75.2, 65.8,63.4, 55.2]
+			}
+		]
+	};
+	//使用制定的配置项和数据显示图表
+	myChart2.setOption(option);
+}
+//渲染折线图
+function lineChartQuality() {
+	//获取容器
+	backService.get("/environmentCredit/rivernamesum.json", {
+	}, function (res) {
+		if (res != null) {
+			//拿到容器
+			var dom = document.getElementById("environmentalQuality");
+			var myChart = echarts.init(dom);
+			//数据源
+			var data = [];
+			var area = [];
+			//获取数组;
+			AbandonLine = res.data.linkedCaseInsensitiveMapList;
+			//改造数据源
+			for (var i = 0; i < AbandonLine.length; i++) {
+				data[i] = AbandonLine[i].value;
+				area[i] = AbandonLine[i].name;
+			}
+			var app = {};
+			option = null;
+			option = {
+				title: {
+					text: '',
+					textStyle: {
+						color: '#02A2E9'          //legend字体颜色
+					}
+				},
+				grid: {
+					top:'20px',
+					left: '3%',
+					right: '7%',
+					bottom: '2%',
+					containLabel: true
+				},
+				xAxis: {
+					type: 'category',
+					boundaryGap: false,
+					data: area,
+					textStyle: {
+						color: '#02A2E9'       //legend字体颜色
+					}
+				},
+				axisLabel: {
+					color: "#ff0"//刻度线标签颜色
+
+				},
+				// ******* 说明栏 *********
+				// legend: {
+				//     data: ['排放量']
+				// },
+				yAxis: {
+					type: 'value',
+					min: 0,
+					max: 300,
+					splitNumber: 3
+				},
+				series: [{
+					name: "排放量",
+					data: data,
+					type: 'line',
+					areaStyle: {}
+				}]
+			};
+			if (option && typeof option === "object") {
+				myChart.setOption(option, true);
+			}
+		}
+	}, function () {
+
+	});
+}
+
+function readWaterSupplyData(){
+	backService.get("/environmentCredit/mqwatersupply.json", {
+	}, function (res) {
+		if (res == null) {
+			return;
+		}
+		var waterSupplyCount = 0;
+		var arrayArea = [];
+		var arrayWater = [];
+		for (var i = 0; i < res.data.linkedCaseInsensitiveMapList.length; i++) {
+			waterSupplyCount += res.data.linkedCaseInsensitiveMapList[i].mbWater;
+			arrayArea.push(res.data.linkedCaseInsensitiveMapList[i].AREA);
+			arrayWater.push(res.data.linkedCaseInsensitiveMapList[i].mbWater);
+		}
+		waterSupplyCount = parseFloat(waterSupplyCount.toFixed(2));
+		var dom = document.getElementById("waterSupply");
+		var myChart = echarts.init(dom);
+		var app = {};
+		option = null;
+		option = {
+			"title": {
+				"text": " ",
+				"left": "center",
+				"y": "10",
+				"textStyle": {
+					"color": "#fff"
+				}
+			},
+			"color": "#384757",
+			"tooltip": {
+				"trigger": "axis",
+				"axisPointer": {
+					"type": "cross",
+					"crossStyle": {
+						"color": "#384757"
+					}
+				}
+			},
+			"legend": {
+				"data": [
+					{
+						"name": "供水量(亿立方米)",
+						"icon": "circle",
+						"textStyle": {
+							"color": "#7d838b"
+						}
+					},
+					{
+						"name": "比率",
+						"icon": "circle",
+						"textStyle": {
+							"color": "#ffff"
+						}
+					}
+				],
+				"top": "10%",
+				"textStyle": {
+					"color": "#ffff"
+				}
+			},
+			"xAxis": [
+				{
+					"type": "category",
+					"data": arrayArea,
+					"axisPointer": {
+						"type": "shadow"
+					},
+					"axisLabel": {
+						"show": true,
+						"textStyle": {
+							"color": "#ffff"
+						}
+					}
+				}
+			],
+			"yAxis": [
+				{
+					"type": "value",
+					"name": "供水量",
+					"nameTextStyle": {
+						"color": "#ffff"
+					},
+					"min": 0,
+					"max": 10,
+					"interval": 10,
+					"axisLabel": {
+						"show": true,
+						"textStyle": {
+							"color": "#ffff"
+						}
+					},
+					"axisLine": {
+						"show": true
+					},
+					"splitLine": {
+						"lineStyle": {
+							"color": "#ffff" //#7d838b
+						}
+					}
+				},
+				{
+					"type": "value",
+					"name": "比率",
+					"show": true,
+					"axisLabel": {
+						"show": true,
+						"textStyle": {
+							"color": "#ffff"
+						}
+					}
+				}
+			],
+			"grid": {
+				"top": "20%"
+			},
+			"series": [
+				{
+					"name": "供水量(亿立方米)",
+					"type": "bar",
+					"data": arrayWater,
+					"barWidth": "auto",
+					"itemStyle": {
+						"normal": {
+							"color": {
+								"type": "linear",
+								"x": 0,
+								"y": 0,
+								"x2": 0,
+								"y2": 1,
+								"colorStops": [
+									{
+										"offset": 0,
+										"color": "rgba(255,37,117,0.7)"
+									},
+									{
+										"offset": 0.5,
+										"color": "rgba(0,255,252,0.7)"
+									},
+									{
+										"offset": 1,
+										"color": "rgba(0,255,252,0.3)"
+									}
+								],
+								"globalCoord": false
+							}
+						}
+					},
+					"barGap": "0"
+				},
+				{
+					"name": "比率",
+					"type": "line",
+					"yAxisIndex": 1,
+					"data": (
+							function () {
+								var res = [];
+								var len = 0;
+								for (var i = 0; i < arrayWater.length; i++) {
+									console.log(arrayWater[i] / waterSupplyCount)
+									res.push((arrayWater[i] / waterSupplyCount * 100).toFixed(2));
+								}
+								return res;
+							}
+							)(),
+					"itemStyle": {
+						"normal": {
+							"color": "#ffaa00"
+						}
+					},
+					"smooth": true
+				}
+			]
+		};
+		if (option && typeof option === "object") {
+			myChart.setOption(option, true);
+		}
+	}, function () {
+
+	});
+}
+</script>
+</html>

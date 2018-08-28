@@ -1,0 +1,8 @@
+GET http://localhost:8080/ht-app-server/happiness_station/activity/query_activity_list.json?before=0&count=10
+Accept: */*
+Cache-Control: no-cache
+
+<> 2018-07-30T045106.200.json
+
+###
+

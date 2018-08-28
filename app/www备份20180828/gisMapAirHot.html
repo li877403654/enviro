@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <meta name="viewport" content="initial-scale=1, maximum-scale=1,user-scalable=no" />
+    <title>heatMap</title>
+    
+
+	<script type="text/javascript" src="js/lib/jquery-3.3.1.min.js"></script>
+	<script type="text/javascript" src="js/index/echarts.js"></script>
+	<script type="text/javascript" src="js/index/echarts-wordcloud.js"></script>
+
+
+	
+    <link rel="stylesheet" type="text/css" href="css/gis/esri.css" />
+  
+    <script type="text/javascript" src="js/gis/init.js"></script>
+    
+    	<!--前后端分离-->
+	<script src="js/session.js"></script>
+	<script src="js/backservice.js"></script>
+	<script src="js/app.js"></script>
+    
+ 	<style>
+		  html
+        {
+         height:100%;
+         margin:0;
+         
+        }
+        body
+        {
+            height:100%;
+            margin:0; 
+        }
+		#map-area{
+    		width: 100%;
+    		height: 100%;
+    	}
+	</style>
+</head>
+
+<body>
+    <div id="map-area"></div>
+</body>
+	<script src="layui/layui.all.js"></script>
+<script>
+//加载层
+
+	var index = layer.load(0, {shade: false}); //0代表加载的风格，支持0-2
+    var map;
+    require(["esri/map", "esri/renderers/HeatmapRenderer", "dojo/domReady!"], function (Map, HeatmapRenderer) {
+        map = new Map("map-area", {
+            zoom: 8,
+            // maxZoom: 8,
+            // minZoom: 8,
+            center:[113.147, 23.039],
+            logo: false,
+             sliderStyle: "large",
+            zoom: 0
+        });
+
+        var tiledUrl = "https://map.geoq.cn/ArcGIS/rest/services/ChinaOnlineCommunity/MapServer";
+        var tiledUrl1 = "http://172.16.104.47:6080/arcgis/rest/services/fs170615/MapServer";
+        var TiledLayer = new esri.layers.ArcGISTiledMapServiceLayer(tiledUrl1);
+
+        map.addLayer(TiledLayer);
+
+        var layerDefinition = {
+            "geometryType": "esriGeometryPoint",
+            "fields": [{
+                "name": "ID",
+                "type": "esriFieldTypeInteger",
+                "alias": "ID"
+            }]
+        }
+        var featureCollection = {
+            layerDefinition: layerDefinition,
+            featureSet: null
+        };
+        var featureLayer = new esri.layers.FeatureLayer(featureCollection, {
+            mode: esri.layers.FeatureLayer.MODE_SNAPSHOT,
+            outFields: ["*"],
+            opacity: 1
+        });
+
+        var heatmapRenderer = new HeatmapRenderer({
+            colors: ["rgba(255, 0, 0, 0)", "rgb(0, 255, 0)", "rgb(255, 255, 0)", "rgb(255, 0, 0)"],
+            blurRadius: 9,
+            maxPixelIntensity: 200,
+            minPixelIntensity: 10
+        });
+        featureLayer.setRenderer(heatmapRenderer);
+        map.addLayer(featureLayer);
+
+        var heatDataUrl = "http://172.16.88.49:8080/app-server/environmentCredit/pollutionall.json";
+       	var url="/environmentCredit/pollutionall.json";
+       backService.get(url, {}, function (data) {
+           
+            for (var i = 0; i < data.data.polluSourCtroList.length; i++) {
+                var x = data.data.polluSourCtroList[i].x;
+                var y = data.data.polluSourCtroList[i].y;         
+                var point = new esri.geometry.Point(x, y, new esri.SpatialReference({ wkid: 4326 }));
+                featureLayer.add(new esri.Graphic(point));
+            }
+			layer.close(index);
+        });
+		
+    });
+</script>
+
+</html>

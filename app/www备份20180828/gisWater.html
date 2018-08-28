@@ -1,0 +1,543 @@
+<!DOCTYPE html>
+<html>
+
+<head lang="en">
+    <meta charset="UTF-8">
+    <meta name="renderer" content="webkit">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <meta http-equiv="Access-Control-Allow-Origin" content="*">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="format-detection" content="telephone=no">
+    <link rel="icon" href="favicon.ico">
+    <link href="css/layout/global.css" rel="stylesheet" />
+    <link href="css/layout/layout.css" rel="stylesheet" />
+    <script type="text/javascript" src="js/common/common.js"></script>
+    <script type="text/javascript" src="js/index/echarts.js"></script>
+    <script type="text/javascript" src="js/index/echarts-wordcloud.js"></script>
+
+    <!-- echarts -->
+    <script type="text/javascript" src="js/echarts.min.js"></script>
+
+    <!--<script type="text/javascript" src="js/index.js"></script>-->
+    <title>设计院智慧环保一张图</title>
+    <!--地图-->
+    <link rel="stylesheet" href="http://172.16.104.47:8084/arcgis_js_api/library/3.14/3.14/dijit/themes/nihilo/nihilo.css">
+    <link rel="stylesheet" href="http://172.16.104.47:8084/arcgis_js_api/library/3.14/3.14/esri/css/esri.css">
+    <script src="http://172.16.104.47:8084/arcgis_js_api/library/3.14/3.14/dojo/dojo.js" chartset="UTF-8"></script>
+    <script type="text/javascript" src="https://code.jquery.com/jquery-3.1.1.min.js"></script>
+      	<!--前后端分离-->
+	<script src="js/session.js"></script>
+	<script src="js/backservice.js"></script>
+	<script src="js/app.js"></script>
+      
+      <style>
+      html
+        {
+         height:100%;
+         margin:0;
+        }
+        body
+        {
+            height:100%;
+            margin:0; 
+        }
+    	#map-area{
+    		width: 100%;
+    		height: 100%;
+    	}
+    </style>
+		<script src="layui/layui.all.js"></script>
+    <script>
+	    //加载层
+		var index = layer.load(0, {shade: false}); //0代表加载的风格，支持0-2
+        //污水处理厂
+        const ws = 1;
+        //供水处理厂
+        const gs = 2;
+        //饮用水源地分析
+        const yys = 3;
+
+        $("#map-area").html("");
+        require(["esri/map", "esri/layers/ArcGISTiledMapServiceLayer", "esri/layers/GraphicsLayer", "esri/layers/FeatureLayer",
+            "esri/dijit/Popup", "dijit/TooltipDialog", "esri/symbols/SimpleMarkerSymbol", "esri/symbols/PictureMarkerSymbol",
+            "esri/symbols/SimpleLineSymbol", "esri/symbols/SimpleFillSymbol", "esri/symbols/TextSymbol", "esri/renderers/ClassBreaksRenderer",
+            "esri/renderers/SimpleRenderer", "esri/InfoTemplate", "esri/SnappingManager", "esri/sniff",
+            "esri/Color", "esri/SpatialReference", "esri/graphic", "esri/tasks/query",
+            "esri/tasks/QueryTask", "esri/geometry/geodesicUtils", "esri/geometry/webMercatorUtils", "esri/units",
+            "esri/geometry/Polyline", "esri/toolbars/draw", "esri/toolbars/edit",
+            "dojo/keys", "dojo/on", "dojo/request", "dojo/_base/lang", "dojo/dom", "dojo/dom-attr", "dojo/dom-construct", "dojo/string",
+            "esri/layers/LabelClass", "esri/geometry/Point", "esri/geometry/Polygon", "dojo/domReady!"],
+            function (Map, ArcGISTiledMapServiceLayer, GraphicsLayer, FeatureLayer, Popup, TooltipDialog, SimpleMarkerSymbol, PictureMarkerSymbol,
+                SimpleLineSymbol, SimpleFillSymbol, TextSymbol, ClassBreaksRenderer, SimpleRenderer, InfoTemplate, SnappingManager,
+                has, Color, SpatialReference, Graphic, Query, QueryTask, geodesicUtils, webMercatorUtils, Units, Polyline, Draw, Edit, keys, on, request, lang, dom,
+                domAttr, domConstruct, string, LabelClass, Point, Polygon
+            ) {
+
+                //创建popup弹出层
+                var popup = new Popup(null, domConstruct.create("div"));
+
+                var map = new Map("map-area", {
+                    showLabels: true,
+                    logo: false,
+                    sliderStyle: "large",
+                    infoWindow: popup,
+                    center: [113.147, 23.036],
+                    zoom: 0
+                });
+                //定义动态地图服务图层
+                var tiled = new ArcGISTiledMapServiceLayer("http://172.16.104.47:6080/arcgis/rest/services/fs170615/MapServer");
+                map.addLayer(tiled);
+
+                // 定义 图像图层，是一个客户端展示的图层，可以将客户端绘制的图形，标记，文字，等等通过Graphic的方式展示。
+                var pointsArcCoordsLayer = new GraphicsLayer();
+                map.addLayer(pointsArcCoordsLayer);
+
+
+
+
+
+
+
+               backService.get("/environmentCredit/waterpoint.json", function (data) {
+                    //定义标志，以及标志长宽
+                    //水柱模型
+                    var pictureSymbolWaterColumn = new PictureMarkerSymbol("images/gsc.png", 30, 30);
+                    //黑点(污水处理厂)
+                    var pictureSymbolBlack = new PictureMarkerSymbol("images/wsc.png", 10, 15);
+                    //灰点(供水处理厂)
+                    var pictureSymbolGray = new PictureMarkerSymbol("images/syd.png", 10, 15);
+                    //白点
+                    var pictureSymbolWhite = new PictureMarkerSymbol("images/white.png", 10, 10);
+
+
+                    //data = { "ok": true, "msg": null, "data": { "polluSourCtroList": [{ "id": 1, "supervisiontype": "1", "cityName": "佛山市", "area": "三水区", "enterpriseName": "青岛啤酒（三水）有限公司", "staContEnterpType": "1", "x": "112.90467719326922", "y": "23.294580845554856", "risk": "3", "type": "1" }, { "id": 2, "supervisiontype": "1", "cityName": "佛山市", "area": "三水区", "enterpriseName": "佛山市三水科丽达针织染整有限公司", "staContEnterpType": "1", "x": "113.07829979208364", "y": "23.046261251535648", "risk": "1", "type": "1" }, { "id": 3, "supervisiontype": "1", "cityName": "佛山市", "area": "高明区", "enterpriseName": "广东溢达纺织有限公司", "staContEnterpType": "1", "x": "112.90852118441544", "y": "22.88901654372443", "risk": "1", "type": "0" }, { "id": 4, "supervisiontype": "1", "cityName": "佛山市", "area": "高明区", "enterpriseName": "佛山市高明刘玲纺织染整有限公司", "staContEnterpType": "1", "x": "112.84083973738238", "y": "22.905654919168695", "risk": "2", "type": "0" }, { "id": 5, "supervisiontype": "1", "cityName": "佛山市", "area": "高明区", "enterpriseName": "佛山市高明祥泽纺织印染有限公司", "staContEnterpType": "1", "x": "113.1340256353934", "y": "23.035094840514384", "risk": "1", "type": "0" }, { "id": 6, "supervisiontype": "1", "cityName": "佛山市", "area": "高明区", "enterpriseName": "佛山市海天（高明）调味食品有限公司", "staContEnterpType": "1", "x": "112.8338272052516", "y": "22.889353108437054", "risk": "1", "type": "1" }, { "id": 7, "supervisiontype": "1", "cityName": "佛山市", "area": "高明区", "enterpriseName": "佛山市高明盈夏纺织有限公司", "staContEnterpType": "1", "x": "113.1340256353934", "y": "23.035094840514384", "risk": "3", "type": "0" }, { "id": 8, "supervisiontype": "1", "cityName": "佛山市", "area": "顺德区", "enterpriseName": "佛山市顺德金纺集团有限公司", "staContEnterpType": "1", "x": "113.29113368067807", "y": "22.746479587751176", "risk": "2", "type": "1" }, { "id": 9, "supervisiontype": "1", "cityName": "佛山市", "area": "顺德区", "enterpriseName": "佛山市顺德区前进实业有限公司", "staContEnterpType": "1", "x": "113.33308118382606", "y": "22.756888849678679", "risk": "1", "type": "0" }, { "id": 10, "supervisiontype": "1", "cityName": "佛山市", "area": "顺德区", "enterpriseName": "佛山市锦利针织有限公司", "staContEnterpType": "1", "x": "113.08049436322344", "y": "22.902194466611037", "risk": "2" }] } };
+                    console.log("爸爸");
+                    console.log(data.data.hashMap);
+                    $.each(data.data.hashMap, function (k, v) {
+
+                        console.log(v);
+                        $.each(v, function (sk, sv) {
+                            //console.log(sv);
+                            var newPoint = new Point(sv.x, sv.y, map.spatialReference);
+                            if (k == yys) {
+                                //大水滴样式( 饮用水源地统计分析=3)
+                                var graphic = new Graphic(newPoint, pictureSymbolWaterColumn);
+
+                                //id
+                                graphic.id = sv.id;
+                                //年月
+                                graphic.checkTime = sv.checkTime;
+                                //厂名
+                                graphic.crossSectionName = sv.crossSectionName;
+                                //河流名称
+                                graphic.waterSource = sv.waterSource;
+                                //取水量
+                                graphic.withdrawals = sv.withdrawals;
+                                //水质
+                                graphic.wqi = sv.wqi;
+                                //水质量(优,良)
+                                graphic.waterQuality = sv.waterQuality;
+                                //主要项目
+                                graphic.majorProjects = sv.majorProjects;
+
+
+                            } else if (k == gs) {
+                                //供水处理厂(灰色灰点 = 2)
+                                var graphic = new Graphic(newPoint, pictureSymbolGray);
+
+                                //市区
+                                graphic.downtown = sv.downtown;
+                                //公司
+                                graphic.company_name = sv.company_name;
+                                //地址
+                                graphic.company_address = sv.company_address;
+                                //国家单位
+                                graphic.department = sv.department;
+                                //电话
+                                graphic.phone = sv.phone;
+                                //服务地区数量
+                                graphic.service_population = sv.service_population;
+                                //id
+                                graphic.id = sv.id;
+
+                            } else if (k == ws) {
+                                //污水处理厂(黑色黑点 = 1)
+                                var graphic = new Graphic(newPoint, pictureSymbolBlack);
+
+                                //id
+                                graphic.id = sv.id;
+                                //监管类型(国控=1)
+                                graphic.supervisiontype = sv.supervisiontype;
+                                //市
+                                graphic.cityName = sv.cityName;
+                                //区
+                                graphic.area = sv.area;
+                                //公司名
+                                graphic.enterpriseName = sv.enterpriseName;
+                                //废水类型
+                                graphic.staContEnterpType = sv.staContEnterpType;
+
+                            } else {
+                                //找不到百点
+                                var graphic = new Graphic(newPoint, pictureSymbolwhite);
+                            }
+                            //TODO 
+                            //给图形绑定上特殊标识符标识水柱
+                            graphic.type = k;
+               
+                            console.log(sv);
+
+
+                            graphic.show();
+                            //console.log("pointsArcCoordsLayer");
+                            //console.log(pointsArcCoordsLayer);
+                            pointsArcCoordsLayer.add(graphic);
+                        })
+                    })
+                    pointsArcCoordsLayer.show();
+					  layer.close(index);
+                 
+                });
+
+
+
+                // 给标志点监听点击事件，并且加上自定义弹出框,样式为黑色弹框
+                pointsArcCoordsLayer.on("click", function (e) {
+                    if (e.graphic.type == yys) {
+                        console.log('饮用水');
+                        //饮用水
+                        showTreatmentPlantInfo(e);
+                    } else if (e.graphic.type == gs) {
+                        console.log('供水' + e);
+                        //供水处理厂
+                        showProvideWaterFactoryInfo(e);
+                    } else if (e.graphic.type == ws) {
+                        console.log('污水' + e);
+                        showSewageFactoryInfo(e);
+                    }
+                });
+
+                //污水处理厂弹框信息
+                function showSewageFactoryInfo(e) {
+                    console.log(e.graphic)
+                    var risk = e.graphic.staContEnterpType == "1" ? "国控" : e.graphic.staContEnterpType == "2" ? "省控" : e.graphic.staContEnterpType == "3" ? "市控" : "无";
+                    var detailInfo =
+                        '<div style="width: 80%;text-align: center;">' +
+                        '<table style="position: relative;left: 10%;">' +
+                        '<tr style="height: 10px;"></tr><tr>' +
+                        '<td style="width: 35%;background-color: #029ce1;color: #fff;padding: 2px 4px;" >' + '控制范围:' +risk + '</td>' +
+                       '</tr >' +'<tr style="height: 10px;"></tr>'+
+                        '<tr>' +
+                        '<td style="width: 35%;background-color: #029ce1;color: #fff;padding: 2px 4px;">' +'地址:' +e.graphic.cityName + e.graphic.area + e.graphic.enterpriseName + '</td>' +
+                        '</tr>' +'<tr style="height: 10px;"></tr>'+
+                        '<tr>' +
+                        '<td style="width: 35%;background-color: #029ce1;color: #fff;padding: 2px 4px;">' + '项目阶段:' + '一期' + '</td>' +
+                        '</tr>' +
+                        '</table >' +
+                        '</div>';
+                    /// 保留
+                    // var str = '地址:' + e.graphic.cityName + e.graphic.area + e.graphic.enterpriseName +
+                    //     '空气质量达标情况:' + supervisiontype + '<br>' +
+                    //     '企业属性:' + risk +
+                    //     '水质量达标情况:' + '暂无' +
+                    //     //---------------折线图----------------
+                    //     '<div id="line" style="height: 150%"></div>';
+                    //--------------折线图 END-----------
+                    popup.setTitle(e.graphic.enterpriseName);
+                    popup.setContent(detailInfo);
+                    popup.show(e.mapPoint);
+                    //设置弹出框内编剧
+                    //contentPane
+                    console.log($(".contentPane"));
+                     $(".title").css({
+                    	"width":"220px", "whiteSpace":"nowrap", "overflow":"hidden","textOverflow":"ellipsis",
+                    });
+                    $(".actionsPane").css({ "display": "none" });
+                     $(".contentPane").css({
+                    	"backgroundColor": "#0a1227","padding":"0px","overflow":"hidden","height":"150px"
+                    	,"width": "300px"
+                    });
+                    $(".esriPopupWrapper").css({
+                    	"width": "300px"
+                    });
+                    $(".sizer .titleButton.maximize").addClass("hidden");
+					$(".titlePane").css({
+						"backgroundColor":" #0a1227","textAlign": "center","width": "294px"
+					});
+					$(".actionsPane").css({ "display": "none" });
+					$(".close").css({
+						"right":"-25px"
+					});
+					$(".outerPointer").css({
+					    "backgroundColor": "#0a1227",
+					    "z-index": "99",
+					    "boxShadow":" #050f1e 0px 0px",
+                   });
+                }
+
+
+                //供水处理厂弹框信息
+                function showProvideWaterFactoryInfo(e) {
+                    //空气污染情况
+                    // var supervisiontype;
+                    // switch (e.graphic.supervisiontype) {
+                    //     case ("1"):
+                    //         //alert(1)
+                    //         supervisiontype = "优良";
+                    //         break;
+                    //     case ("2"):
+                    //         //alert(2)
+                    //         supervisiontype = "良好";
+                    //         break;
+                    //     case ("3"):
+                    //         // alert(3)
+                    //         supervisiontype = "不合格";
+                    //         break;
+                    //     default: supervisiontype = "无";
+                    // }
+                    //国控省控市控
+                    // var risk = e.graphic.tisk == "1" ? "国控" : e.graphic.tisk == "2" ? "省控" : e.graphic.tisk == "3" ? "市控" : "无";
+
+                    //console.log(e.graphic.id)
+                    var detailInfo =
+                        '<div style="width: 80%;text-align: center;">' +
+                        '<table style="position: relative;left: 10%;">' +
+                        '<tr style="height: 10px;"></tr><tr>' +
+                        '<td style="width: 35%;background-color: #029ce1;color: #fff;padding: 2px 4px;" >' + '建设单位:' + e.graphic.department + '</td>' +
+                        '</tr >' +'<tr style="height: 10px;"></tr>'+
+                        '<tr>' +
+                        '<td style="width: 35%;background-color: #029ce1;color: #fff;padding: 2px 4px;">' + '地址:' +  e.graphic.company_address +'</td>' +
+                        '</tr>' +'<tr style="height: 10px;"></tr>'+
+                        '<tr>' +
+                        '<td style="width: 35%;background-color: #029ce1;color: #fff;padding: 2px 4px;">' + '项目阶段:'+ '一期' + '</td>' +
+                        '</tr>' +
+                        '</table >' +
+                        '</div>';
+                    /// 保留
+                    // var str = '地址:' + e.graphic.cityName + e.graphic.area + e.graphic.enterpriseName +
+                    //     '空气质量达标情况:' + supervisiontype + '<br>' +
+                    //     '企业属性:' + risk +
+                    //     '水质量达标情况:' + '暂无' +
+                    //     //---------------折线图----------------
+                    //     '<div id="line" style="height: 150%"></div>';
+                    //--------------折线图 END-----------
+                    popup.setTitle(e.graphic.company_name);
+                    popup.setContent(detailInfo);
+                    popup.show(e.mapPoint);
+                    //设置弹出框内编剧
+				
+                    console.log($(".contentPane"));
+                     $(".title").css({
+                    	"width":"220px", "whiteSpace":"nowrap", "overflow":"hidden","textOverflow":"ellipsis",
+                    });
+                    $(".actionsPane").css({ "display": "none" });
+                     $(".contentPane").css({
+                    	"backgroundColor": "#0a1227","padding":"0px","overflow":"hidden","height":"150px"
+                    	,"width": "300px"
+                    });
+                    $(".esriPopupWrapper").css({
+                    	"width": "300px"
+                    });
+                    $(".sizer .titleButton.maximize").addClass("hidden");
+					$(".titlePane").css({
+						"backgroundColor":" #0a1227","textAlign": "center","width": "294px"
+					});
+					$(".actionsPane").css({ "display": "none" });
+					$(".close").css({
+						"right":"-25px"
+					});
+					$(".outerPointer").css({
+					    "backgroundColor": "#0a1227",
+					    "z-index": "99",
+					    "boxShadow":" #050f1e 0px 0px",
+                   });
+                }
+
+                //饮用水原地统计分析弹框信息
+                function showTreatmentPlantInfo(e) {
+                    //空气污染情况
+                    // var supervisiontype;
+                    // switch (e.graphic.supervisiontype) {
+                    //     case ("1"):
+                    //         //alert(1)
+                    //         supervisiontype = "优良";
+                    //         break;
+                    //     case ("2"):
+                    //         //alert(2)
+                    //         supervisiontype = "良好";
+                    //         break;
+                    //     case ("3"):
+                    //         // alert(3)
+                    //         supervisiontype = "不合格";
+                    //         break;
+                    //     default: supervisiontype = "无";
+                    // }
+                    //国控省控市控
+                    //var risk = e.graphic.tisk == "1" ? "国控" : e.graphic.tisk == "2" ? "省控" : e.graphic.tisk == "3" ? "市控" : "无";
+
+                    console.log(e.graphic)
+                    var detailInfo =
+                        '<div  style="width: 100%;">' +
+                        '<table border = "0" style="text-align: left;font-size: 12px;padding: 5px;">' +
+                        '<tr>' +
+                        '<td style="width: 35%;background-color: #029ce1;color: #fff;padding: 2px 4px;">' + '水厂名称:' +  e.graphic.crossSectionName +'</td>' +
+                        '<td style=" width: 15%;">' + '</td>' +
+                        '<td style="width: 35%;background-color: #029ce1;color: #fff;padding: 2px 4px;">' + '水质级别:' + e.graphic.waterQuality +'</td>' +
+                        '<td>'  + '</td>' +
+                        '</tr >' +
+                        '<tr>' +
+                        '<td style="width: 35%;background-color: #029ce1;color: #fff;padding: 2px 4px;">' + '水质指数:'+ e.graphic.wqi + '</td>' +
+                        '<td>' + '</td>' +
+                        '<td style="width: 35%;background-color: #029ce1;color: #fff;padding: 2px 4px;">' + '每月取水量:'  + e.graphic.withdrawals + '</td>' +
+                        '<td>' + '</td>' +
+                        '</tr>' +
+                        '<tr>' +
+                        '<td colspan="4">' +
+                        '<div id="line" style="height:200%;width:320px;;position:  relative;top: -50px;"></div>' +
+                        '</td>'
+                    '</tr>' +
+                        '</table >' +
+                        '</div>';
+                    /// 保留
+                    // var str = '地址:' + e.graphic.cityName + e.graphic.area + e.graphic.enterpriseName +
+                    //     '空气质量达标情况:' + supervisiontype + '<br>' +
+                    //     '企业属性:' + risk +
+                    //     '水质量达标情况:' + '暂无' +
+                    //     //---------------折线图----------------
+                    //     '<div id="line" style="height: 150%"></div>';
+                    //--------------折线图 END-----------
+                    popup.setTitle(e.graphic.crossSectionName);
+                    popup.setContent(detailInfo);
+                    popup.show(e.mapPoint);
+                    //设置弹出框内编剧
+                    //contentPane
+                    //渲染Echarts折线图
+                    lineChart(e.graphic.waterSource);
+					
+                    console.log($(".contentPane"));
+                    $(".contentPane").css({
+                    	"backgroundColor": "#0a1227","padding":"0px","overflow":"hidden","height":"175px"
+                    	,"width": "330px"
+                    });
+                    $(".esriPopupWrapper").css({
+                    	"width": "330px"
+                    });
+                    $(".sizer .titleButton.maximize").addClass("hidden");
+					$(".titlePane").css({
+						"backgroundColor":" #0a1227","textAlign": "center","width": "324px"
+					});
+					$(".actionsPane").css({ "display": "none" });
+					$(".close").css({
+						"right":"-50px"
+					});
+					$(".outerPointer").css({
+					    "backgroundColor": "#0a1227",
+					    "z-index": "99",
+					    "boxShadow":" #050f1e 0px 0px",
+                   });
+                }
+
+
+
+                //mouseover
+                map.on("click", function (e) {
+                    // Arrayeach(e);
+                });
+                function Arrayeach(e) {
+                    $.each(e, function (k, v) {
+                        console.log(k);
+                        if (typeof k == 'object') {
+                            Arrayeach(k);
+                        }
+                        console.log(v);
+                        if (typeof v == 'object') {
+                            Arrayeach(v);
+                        }
+                    });
+                }
+
+            }
+        );
+        //通过ID获取废弃排放折线图数据
+        function getAbandonLineById(id) {
+            backService.get("/environmentCredit/polluvaluebyid.json?id=" + id, function (data) {
+                if (data != null) {
+                    console.log(data.data.polluSourCtroValueList);
+                    return data.data.polluSourCtroValueList;
+                }
+            });
+        }
+
+        //渲染折线图
+        function lineChart(name) {
+            console.log(name);
+            //获取容器
+            backService.get("/environmentCredit/withdrawalsbyname.json?name=" + name, function (resouce) {
+                if (resouce != null) {
+                    //拿到容器
+                    var dom = document.getElementById("line");
+                    var myChart = echarts.init(dom);
+                    //数据源
+                    var data = [];
+                    var arrayMonth = [];
+                    //获取数组;
+                    console.log(resouce)
+                    var AbandonLine = resouce.data.linkedCaseInsensitiveMapList;
+                    //改造数据源
+                    for (var i = 0; i < AbandonLine.length; i++) {
+                        data[i] = AbandonLine[i].withdrawals;
+                        arrayMonth[i] = AbandonLine[i].check_time;
+                    }
+                    var app = {};
+                    console.log(data);
+                    option = null;
+                    option = {
+                        title: {
+                            text: ' '
+                        },tooltip: {
+			                formatter: "{c}万立方米"
+			               
+			            },xAxis: {
+                            type: 'category',
+                            boundaryGap: false,
+                            data: ['1', '2', '3', '4', '5', '6', '7']
+                        },
+                        // ******* 说明栏 *********
+                        // legend: {
+                        //     data: ['排放量']
+                        // },
+                        yAxis: {
+                            type: 'value',
+                            axisLabel: { //调整x轴的lable 
+			                    textStyle: {
+			                        fontSize: 9 // 字体
+			                    }
+			                }
+                        },
+                        axisLabel: {
+							color: "#ff0" //改变XY轴字体颜色
+						},
+                        series: [{
+                            name: "供水量",
+                            data: data,
+                            type: 'line',
+                            areaStyle: {}
+                        }]
+                    };
+
+                    if (option && typeof option === "object") {
+                        myChart.setOption(option, true);
+                    }
+                }
+            }
+            );
+        }
+
+    </script>
+</head>
+
+<body>
+    <div id="map-area"></div>
+</body>

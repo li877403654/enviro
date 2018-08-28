@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="VcsDirectoryMappings">
+    <mapping directory="$PROJECT_DIR$/../.dep" vcs="svn" />
+    <mapping directory="$PROJECT_DIR$" vcs="svn" />
+    <mapping directory="$PROJECT_DIR$/../pub" vcs="svn" />
+    <mapping directory="$PROJECT_DIR$/../shared-dao" vcs="svn" />
+    <mapping directory="$PROJECT_DIR$/../shared-model" vcs="svn" />
+    <mapping directory="$PROJECT_DIR$/../shared-utils" vcs="svn" />
+  </component>
+</project>

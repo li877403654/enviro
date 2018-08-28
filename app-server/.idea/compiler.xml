@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="CompilerConfiguration">
+    <excludeFromCompile>
+      <file url="file://$PROJECT_DIR$/src/mondrian/java/mondrian/olap4j/FactoryJdbc3Impl.java" />
+    </excludeFromCompile>
+    <wildcardResourcePatterns>
+      <entry name="?*.properties" />
+      <entry name="?*.xml" />
+      <entry name="?*.gif" />
+      <entry name="?*.png" />
+      <entry name="?*.jpeg" />
+      <entry name="?*.jpg" />
+      <entry name="?*.html" />
+      <entry name="?*.dtd" />
+      <entry name="?*.tld" />
+      <entry name="?*.ftl" />
+      <entry name="?*.vm" />
+    </wildcardResourcePatterns>
+    <bytecodeTargetLevel>
+      <module name=".dep_main" target="1.8" />
+      <module name=".dep_test" target="1.8" />
+      <module name="app-server_main" target="1.8" />
+      <module name="app-server_test" target="1.8" />
+    </bytecodeTargetLevel>
+  </component>
+</project>

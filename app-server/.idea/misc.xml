@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ProjectRootManager" version="2" languageLevel="JDK_1_8" default="false" project-jdk-name="1.8" project-jdk-type="JavaSDK">
+    <output url="file://$PROJECT_DIR$/out" />
+  </component>
+  <component name="SvnBranchConfigurationManager">
+    <option name="myConfigurationMap">
+      <map>
+        <entry key="$PROJECT_DIR$/../.dep">
+          <value>
+            <SvnBranchConfiguration>
+              <option name="trunkUrl" value="svn://61.144.66.11/BIGDATA/hantang/06_code_v2/.dep" />
+            </SvnBranchConfiguration>
+          </value>
+        </entry>
+        <entry key="$PROJECT_DIR$">
+          <value>
+            <SvnBranchConfiguration>
+              <option name="trunkUrl" value="svn://172.16.108.101/BIGDATA/iEnvPro-mdataV2/06_code/app-server" />
+            </SvnBranchConfiguration>
+          </value>
+        </entry>
+        <entry key="$PROJECT_DIR$/../pub">
+          <value>
+            <SvnBranchConfiguration>
+              <option name="trunkUrl" value="svn://172.16.108.101/BIGDATA/iEnvPro-mdataV2/06_code/pub" />
+            </SvnBranchConfiguration>
+          </value>
+        </entry>
+        <entry key="$PROJECT_DIR$/../shared-dao">
+          <value>
+            <SvnBranchConfiguration>
+              <option name="trunkUrl" value="svn://172.16.108.101/BIGDATA/iEnvPro-mdataV2/06_code/shared-dao" />
+            </SvnBranchConfiguration>
+          </value>
+        </entry>
+        <entry key="$PROJECT_DIR$/../shared-model">
+          <value>
+            <SvnBranchConfiguration>
+              <option name="trunkUrl" value="svn://172.16.108.101/BIGDATA/iEnvPro-mdataV2/06_code/shared-model" />
+            </SvnBranchConfiguration>
+          </value>
+        </entry>
+        <entry key="$PROJECT_DIR$/../shared-utils">
+          <value>
+            <SvnBranchConfiguration>
+              <option name="trunkUrl" value="svn://172.16.108.101/BIGDATA/iEnvPro-mdataV2/06_code/shared-utils" />
+            </SvnBranchConfiguration>
+          </value>
+        </entry>
+      </map>
+    </option>
+  </component>
+</project>

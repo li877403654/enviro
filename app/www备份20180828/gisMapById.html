@@ -1,0 +1,280 @@
+<html>
+	<head>
+		<title>gisMapById</title>
+	</head>
+	<body>
+		<meta charset="UTF-8">
+    <meta name="renderer" content="webkit">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <meta http-equiv="Access-Control-Allow-Origin" content="*">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="format-detection" content="telephone=no">
+    <link rel="icon" href="favicon.ico">
+    <link href="css/layout/global.css" rel="stylesheet" />
+    <link href="css/layout/layout.css" rel="stylesheet" />
+    <script type="text/javascript" src="js/common/common.js"></script>
+    <script type="text/javascript" src="js/index/echarts.js"></script>
+     <script type="text/javascript" src="js/index/echarts-wordcloud.js"></script>
+	<!--地图-->
+    <link rel="stylesheet" href="http://172.16.104.47:8084/arcgis_js_api/library/3.14/3.14/dijit/themes/nihilo/nihilo.css">
+    <link rel="stylesheet" href="http://172.16.104.47:8084/arcgis_js_api/library/3.14/3.14/esri/css/esri.css">
+    <script src="http://172.16.104.47:8084/arcgis_js_api/library/3.14/3.14/dojo/dojo.js" chartset="UTF-8"></script>
+    <script type="text/javascript" src="js/lib/jquery-3.3.1.min.js"></script>
+        
+     <!-- echarts -->
+    <script type="text/javascript" src="echarts.min.js"></script>
+    <style>
+      html
+        {
+         height:100%;
+         margin:0;
+        }
+        body
+        {
+            height:100%;
+            margin:0; 
+        }
+    	#map-area{
+    		width: 100%;
+    		height: 100%;
+    	}
+    </style>
+		<script src="layui/layui.all.js"></script>
+    <script>
+	    //加载层
+		var index = layer.load(0, {shade: false}); //0代表加载的风格，支持0-2
+        function add(num){
+        	
+        	var x=$(window.parent.document).find("#x").val();
+        	var y=$(window.parent.document).find("#y").val();
+        	var enterpriseName =$(window.parent.document).find("#enterpriseName").val();
+        	if(!num){
+        		num=1;
+        	}
+        	console.log("--------");
+        	console.log($(window.parent.document).find("#x").val());
+        	if(!x){
+        		
+        	}
+        /*	var x="112.90467719326922";
+        	var y="23.294580845554856";
+        	var enterpriseName ="";*/
+        	/*$.get("http://localhost:8080/app-server/environmentCredit/polluntionbyid.json",
+        	{id:num},
+        	function(data){
+        		if(data.data.polluSourCtro.x){
+        			x=data.data.polluSourCtro.x;
+        		}
+        		if(data.data.polluSourCtro.y){
+        			y=data.data.polluSourCtro.y;
+        		}
+        		enterpriseName=data.data.polluSourCtro.enterpriseName;
+        	});*/
+        	console.log(x);
+            $("#map-area").html("");
+            require(["esri/map", "esri/layers/ArcGISTiledMapServiceLayer", "esri/layers/GraphicsLayer", "esri/layers/FeatureLayer",
+            "esri/dijit/Popup", "dijit/TooltipDialog", "esri/symbols/SimpleMarkerSymbol", "esri/symbols/PictureMarkerSymbol",
+            "esri/symbols/SimpleLineSymbol", "esri/symbols/SimpleFillSymbol", "esri/symbols/TextSymbol", "esri/renderers/ClassBreaksRenderer",
+            "esri/renderers/SimpleRenderer", "esri/InfoTemplate", "esri/SnappingManager", "esri/sniff",
+            "esri/Color", "esri/SpatialReference", "esri/graphic", "esri/tasks/query",
+            "esri/tasks/QueryTask", "esri/geometry/geodesicUtils", "esri/geometry/webMercatorUtils", "esri/units",
+            "esri/geometry/Polyline", "esri/toolbars/draw", "esri/toolbars/edit",
+            "dojo/keys", "dojo/on", "dojo/request", "dojo/_base/lang", "dojo/dom", "dojo/dom-attr", "dojo/dom-construct", "dojo/string",
+            "esri/layers/LabelClass", "esri/geometry/Point", "esri/geometry/Polygon", "dojo/domReady!"],
+            function (Map, ArcGISTiledMapServiceLayer, GraphicsLayer, FeatureLayer, Popup, TooltipDialog, SimpleMarkerSymbol, PictureMarkerSymbol,
+                SimpleLineSymbol, SimpleFillSymbol, TextSymbol, ClassBreaksRenderer, SimpleRenderer, InfoTemplate, SnappingManager,
+                has, Color, SpatialReference, Graphic, Query, QueryTask, geodesicUtils, webMercatorUtils, Units, Polyline, Draw, Edit, keys, on, request, lang, dom,
+                domAttr, domConstruct, string, LabelClass, Point, Polygon
+            ) {
+                //创建popup弹出层
+                var popup = new Popup(null, domConstruct.create("div"));
+
+                var map = new Map("map-area", {
+                    showLabels: true,
+                    logo: false,
+                    sliderStyle: "large",
+                    infoWindow: popup,
+                  /*  center: [113.147, 23.1],*/
+                	center:[x,y],
+                    zoom: 7
+                });
+                //定义动态地图服务图层
+                var tiled = new ArcGISTiledMapServiceLayer("http://172.16.104.47:6080/arcgis/rest/services/fs170615/MapServer");
+                map.addLayer(tiled);
+
+                // 定义 图像图层，是一个客户端展示的图层，可以将客户端绘制的图形，标记，文字，等等通过Graphic的方式展示。
+                var pointsArcCoordsLayer = new GraphicsLayer();
+                map.addLayer(pointsArcCoordsLayer);
+
+
+                //定义标志，以及标志长宽
+                var pictureSymbol = new PictureMarkerSymbol("images/point_icon.png", 30, 30);
+
+                //通过JSON数组遍历坐标点
+
+                console.log("num"+num);
+                console.log(x);
+                console.log(y);
+                var newPoint = new Point(x,y, map.spatialReference);
+                var graphic = new Graphic(newPoint, pictureSymbol);
+                //给图形绑定上特定的值
+                graphic.id = num
+                graphic.enterpriseName = enterpriseName;
+                //graphic.show();
+                console.log("pointsArcCoordsLayer");
+                console.log(pointsArcCoordsLayer);
+                pointsArcCoordsLayer.add(graphic);
+                    
+                //}
+                pointsArcCoordsLayer.show();
+                layer.close(index);
+                // 给标志点监听点击事件，并且加上自定义弹出框,样式为黑色弹框
+                pointsArcCoordsLayer.on("click", function (e) {
+                    //空气污染情况
+                    var supervisiontype;
+                    switch (e.graphic.supervisiontype) {
+                        case ("1"):
+                            //alert(1)
+                            supervisiontype = "优良";
+                            break;
+                        case ("2"):
+                            //alert(2)
+                            supervisiontype = "良好";
+                            break;
+                        case ("3"):
+                            // alert(3)
+                            supervisiontype = "不合格";
+                            break;
+                        default: supervisiontype = "无";
+                    }
+                    //国控省控市控
+                    var risk = e.graphic.tisk == "1" ? "国控" : e.graphic.tisk == "2" ? "省控" : e.graphic.tisk == "3" ? "市控" : "无";
+
+                    //console.log(e.graphic.id)
+                    var detailInfo =
+                        //'<div style="background:linear-gradient(#444444, rgb(252, 252, 252));">' +
+                        '<div style="width: 100%;">' +
+                        '<table border = "0" style="color: #fff;text-align:center;font-size: 12px;padding: 5px;">' +
+                        '<tr>' +
+                        '<td style="width: 35%;">' + '空气质量' + '</td>' +
+                        '<td style=" width: 15%;color: #ffeb00;font-weight: bold;">' + supervisiontype + '</td>' +
+                        '<td style="width: 15%;"></td>'+
+                        '<td style="text-align:left;">企业类型: ' + risk + '</td>' +
+                        '</tr >' +
+                        '<tr>' +
+                        '<td>' + '水质量' + '</td>' +
+                        '<td style=" width: 15%;color: #ffeb00;font-weight: bold;">' + '暂无' + '</td>' +
+                        '<td style="width: 15%;"></td>'+
+                        '<td style="text-align:left;">地址: ' + e.graphic.enterpriseName + '</td>' +
+                        '</tr>' +
+                        '<tr>' +
+                        '<td colspan="4" style=" font-size: 18px;font-weight: bold;">24小时废气排放监控折线图</td></tr> ' +
+                        '<tr>' +
+                        '<td colspan="4">' +
+                        '<div id="line" style="height:200%;width:100%;position:  relative;top: -50px;"></div>' +
+                        '</td>'
+                    '</tr>' +
+                        '</table >' +
+                        '</div>';
+                    /// 保留
+                    var str = '地址:' + e.graphic.cityName + e.graphic.area + e.graphic.enterpriseName +
+                        '空气质量达标情况:' + supervisiontype + '<br>' +
+                        '企业属性:' + risk +
+                        '水质量达标情况:' + '暂无' +
+                        //---------------折线图----------------
+                        '<div id="line" style="height: 150%"></div>';
+                    //--------------折线图 END-----------
+                    popup.setTitle(e.graphic.enterpriseName);
+                    popup.setContent(detailInfo);
+                    popup.show(e.mapPoint);
+                    //设置弹出框内编剧
+                    //contentPane
+                    //渲染Echarts折线图
+                    
+                    lineChart(e.graphic.id);
+                    //
+                    $(".esriPopupWrapper").css({
+                    	"position": "absolute","left": "16px","top": "-60px","width": "320px"
+                    });
+                    $(".sizer").css({
+                    	"backgroundColor": "#02a2e9","width": "322px"
+                    });
+                    $(".title").css({
+                    	"width":"320px", "whiteSpace":"nowrap", "overflow":"hidden","textOverflow":"ellipsis"
+                    });
+                    $(".titlePane").css({"backgroundColor": "#fff0"});
+                    $(".maximize").css({ "display": "none" });
+                    $(".contentPane").css({
+                    	"backgroundColor": "#050f1e","color": "#fff","fontSize": "12px"
+                    	,"overflow":"hidden","height":"230px"
+                    });
+                   $(".content").css({          	
+    					"border": "1px solid #02a2e9","fontSize": "12px","width": "100%","height": "100%"
+                   });
+                   $(".actionsPane").css({ "display": "none" });
+                   $(".outerPointer").css({
+					    "backgroundColor": "#050f1e",
+					    "z-index": "99",
+					    "boxShadow":" #050f1e 0px 0px",
+					    "borderBottom": "#02a2e9 solid 1px",
+					    "borderLeft": "#02a2e9 solid 1px"
+                   });
+                });
+                map.on("mouse-move", function(e){
+                	
+					//console.log(e);
+				});
+                
+            }
+        );
+
+        //渲染折线图
+        function lineChart(array) {
+            var dom = document.getElementById("line");
+            var myChart = echarts.init(dom);
+            var app = {};
+            option = null;
+            option = {
+                title: {
+                    text: ' '
+                },tooltip: {
+	                formatter: "{c}mg/h"
+	               
+	            },xAxis: {
+                    type: 'category',
+                    boundaryGap: false,
+                    data: ['0', '3', '6', '9', '12', '15', '18']
+                },
+                // legend: {
+                //     data: ['排放量']
+                // },
+                yAxis: {
+                    type: 'value'
+                },
+                axisLabel: {
+				color: "#ff0" //改变XY轴字体颜色
+				},
+                series: [{
+                    name: "排放量",
+                    data: [array, array + 1, array + 3, array + 2, 7, 8, 9],
+                    type: 'line',
+                    areaStyle: {}
+                }]
+            };
+            ;
+            if (option && typeof option === "object") {
+                myChart.setOption(option, true);
+            }
+
+            }
+        };
+        add(1);
+    </script>
+   
+        <!--中间部分的地图-->
+        <div id="map-area"></div>
+
+	</body>
+</html>

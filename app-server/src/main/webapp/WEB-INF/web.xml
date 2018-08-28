@@ -1,0 +1,160 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<web-app xmlns="http://java.sun.com/xml/ns/javaee"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://java.sun.com/xml/ns/javaee
+		  http://java.sun.com/xml/ns/javaee/web-app_3_0.xsd"
+         version="3.0">
+
+    <context-param>
+        <param-name>contextConfigLocation</param-name>
+        <param-value>
+            /WEB-INF/spring-config.xml
+        </param-value>
+    </context-param>
+
+    <!-- -->
+
+    <filter>
+        <filter-name>CharacterEncodingFilter</filter-name>
+        <filter-class>
+            org.springframework.web.filter.CharacterEncodingFilter
+        </filter-class>
+        <init-param>
+            <param-name>encoding</param-name>
+            <param-value>UTF-8</param-value>
+        </init-param>
+    </filter>
+    <filter-mapping>
+        <filter-name>CharacterEncodingFilter</filter-name>
+        <url-pattern>*.html</url-pattern>
+        <url-pattern>*.json</url-pattern>
+        <url-pattern>*.do</url-pattern>
+        <url-pattern>*.jsp</url-pattern>
+    </filter-mapping>
+
+
+    <!--..-->
+    <filter>
+        <filter-name>requestDataFilter</filter-name>
+        <filter-class>envir.web.app.filter.RequestDataFilter</filter-class>
+    </filter>
+    <filter-mapping>
+        <filter-name>requestDataFilter</filter-name>
+        <url-pattern>*.html</url-pattern>
+        <url-pattern>*.json</url-pattern>
+        <url-pattern>*.jsp</url-pattern>
+        <url-pattern>*.do</url-pattern>
+        <url-pattern>*.xls</url-pattern>
+    </filter-mapping>
+
+    <!---->
+    <filter>
+        <filter-name>urlFilter</filter-name>
+        <filter-class>envir.web.app.filter.UrlFilter</filter-class>
+        <async-supported>true</async-supported>
+    </filter>
+    <filter-mapping>
+        <filter-name>urlFilter</filter-name>
+        <url-pattern>*</url-pattern>
+        <dispatcher>REQUEST</dispatcher>
+        <dispatcher>ASYNC</dispatcher>
+    </filter-mapping>
+
+    <!-- -->
+    <filter>
+        <filter-name>CorsFilter</filter-name>
+        <!--<filter-class> org.apache.catalina.filters.CorsFilter</filter-class>-->
+        <filter-class>pub.web.CorsFilter</filter-class>
+        <async-supported>true</async-supported>
+        <init-param>
+            <param-name>cors.allowed.methods</param-name>
+            <param-value>GET,POST,HEAD,OPTIONS,PUT</param-value>
+        </init-param>
+        <init-param>
+            <param-name>cors.allowed.headers</param-name>
+            <param-value>x-user-token</param-value>
+        </init-param>
+    </filter>
+    <filter-mapping>
+        <filter-name>CorsFilter</filter-name>
+        <url-pattern>*.json</url-pattern>
+        <url-pattern>/event/listener</url-pattern>
+    </filter-mapping>
+
+    <!-- -->
+    <filter>
+        <filter-name>securityFilter</filter-name>
+        <filter-class>envir.web.app.filter.SecurityFilter</filter-class>
+    </filter>
+    <filter-mapping>
+        <filter-name>securityFilter</filter-name>
+        <url-pattern>*.html</url-pattern>
+        <url-pattern>*.json</url-pattern>
+        <url-pattern>*.do</url-pattern>
+        <dispatcher>REQUEST</dispatcher>
+        <dispatcher>FORWARD</dispatcher>
+    </filter-mapping>
+
+    <!-- -->
+
+    <listener>
+        <listener-class>org.springframework.web.context.ContextLoaderListener
+        </listener-class>
+    </listener>
+
+    <listener>
+        <listener-class>envir.web.app.listener.AppListener</listener-class>
+    </listener>
+    <listener>
+        <listener-class>
+            envir.web.app.listener.SessionListener
+        </listener-class>
+    </listener>
+
+
+    <!-- servlets -->
+    <servlet>
+        <servlet-name>dispatcher</servlet-name>
+        <servlet-class>pub.spring.web.DispatcherServletEx</servlet-class>
+        <init-param>
+            <param-name>contextConfigLocation</param-name>
+            <param-value>
+                /WEB-INF/dispatcher-servlet.xml
+            </param-value>
+        </init-param>
+        <load-on-startup>1</load-on-startup>
+        <async-supported>true</async-supported>
+        <multipart-config>
+            <!--3m-->
+            <max-file-size>20971520</max-file-size>
+            <!--20m-->
+            <max-request-size>20971520</max-request-size>
+            <!--1m-->
+            <file-size-threshold>1048576</file-size-threshold>
+        </multipart-config>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>dispatcher</servlet-name>
+        <url-pattern>*.html</url-pattern>
+        <url-pattern>*.do</url-pattern>
+        <url-pattern>*.json</url-pattern>
+        <url-pattern>*.xls</url-pattern>
+        <url-pattern>*.oa</url-pattern>
+        <url-pattern>/event/listener</url-pattern>
+    </servlet-mapping>
+
+    <jsp-config>
+        <taglib>
+            <taglib-uri>app://pub.form</taglib-uri>
+            <taglib-location>/WEB-INF/classes/pub/tld/form.tld</taglib-location>
+        </taglib>
+    </jsp-config>
+
+    <session-config>
+        <session-timeout>30</session-timeout>
+        <!--<cookie-config>-->
+            <!--<path>/</path>-->
+        <!--</cookie-config>-->
+    </session-config>
+
+</web-app>

@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ProjectModuleManager">
+    <modules>
+      <module fileurl="file://$PROJECT_DIR$/../.dep/.dep.iml" filepath="$PROJECT_DIR$/../.dep/.dep.iml" group=".dep" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/2011917550/.dep_main.iml" filepath="$PROJECT_DIR$/.idea/modules/2011917550/.dep_main.iml" group=".dep" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/2011917550/.dep_test.iml" filepath="$PROJECT_DIR$/.idea/modules/2011917550/.dep_test.iml" group=".dep" />
+      <module fileurl="file://$PROJECT_DIR$/app-server.iml" filepath="$PROJECT_DIR$/app-server.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/app-server_main.iml" filepath="$PROJECT_DIR$/.idea/modules/app-server_main.iml" group="app-server" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/app-server_test.iml" filepath="$PROJECT_DIR$/.idea/modules/app-server_test.iml" group="app-server" />
+      <module fileurl="file://$PROJECT_DIR$/../pub/pub.iml" filepath="$PROJECT_DIR$/../pub/pub.iml" />
+      <module fileurl="file://$PROJECT_DIR$/../shared-dao/shared-dao.iml" filepath="$PROJECT_DIR$/../shared-dao/shared-dao.iml" />
+      <module fileurl="file://$PROJECT_DIR$/../shared-model/shared-model.iml" filepath="$PROJECT_DIR$/../shared-model/shared-model.iml" />
+      <module fileurl="file://$PROJECT_DIR$/../shared-utils/shared-utils.iml" filepath="$PROJECT_DIR$/../shared-utils/shared-utils.iml" />
+    </modules>
+  </component>
+</project>

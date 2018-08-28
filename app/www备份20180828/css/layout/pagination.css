@@ -1,0 +1,42 @@
+.pagination {
+	text-align: center;
+	color: #ccc;
+	-webkit-user-select: none;
+}
+.pagination a {
+	color: #2E729C;
+	display: inline-block;
+	padding: 4px 12px;
+	border: 1px solid #192C4E; //
+	margin: 0 2px;
+	font-weight: bold;
+	vertical-align: middle;
+	margin-right: 2px;
+}
+.pagination a:hover {
+	text-decoration: none;
+	border: 1px solid #1F5D82;
+}
+.pagination span {
+	margin: 0 10px;
+}
+.pagination span.current {
+	display: inline-block;
+	padding: 4px 12px;
+	margin: 0 2px;
+	color: white;
+	background-color: #1F5D82;
+	border: 1px solid #1F5D82;
+	vertical-align: middle;
+}
+.pagination span.disabled {
+	cursor: not-allowed;
+	display: inline-block;
+	padding: 4px 12px;
+	margin: 0 2px;
+	color: #2E729C;
+	background: #1F5D82;
+	border: 1px solid #1F5D82;
+	vertical-align: middle;
+	background-color:rgba(100,100,100,0.2);
+}

@@ -1,0 +1,68 @@
+input[type=date] {background-color:#012235;
+	border: 1px solid #1E4769;
+	border-radius:5px;
+	text-align: center;
+	line-height:25px;
+	color:#ffffff;
+}
+input[type=date]::-webkit-inner-spin-button { visibility: hidden; }
+input[type=date]::-webkit-calendar-picker-indicator {
+	background-color: #012235;
+	color: #0FA2D3;
+	font-size: 18px;
+}
+button {
+	background-color:#012235;
+	border: 1px solid #1E4769;
+	color: #ffffff;
+	padding:5px 10px 5px 10px;
+	border-radius: 5px;
+}
+
+::-webkit-scrollbar {
+	width: 8px;
+	height: 8px;
+}
+::-webkit-scrollbar-button {
+	background-color: #FF7677;
+	display: none
+}
+::-webkit-scrollbar-track {
+	/*background: rgba(255, 255, 255, 0.7)*/
+	background: #055A86;
+
+}
+::-webkit-scrollbar-thumb {
+	background:#49D9FE; /*滚动条颜色*/
+	border-radius: 4px;
+}
+::-webkit-scrollbar-corner {
+	background: #82AFFF;
+	display: none
+}
+::-webkit-scrollbar-resizer {
+	background: #FF0BEE;
+}
+::scrollbar {
+	width: 8px;
+	height: 8px;
+}
+::scrollbar-button {
+	background-color: #FF7677;
+	display: none
+}
+::scrollbar-track {
+	background: rgba(255, 255, 255, 0.7)
+}
+::scrollbar-thumb {
+	background: #aaa;
+	border-radius: 4px;
+}
+::scrollbar-corner {
+	background: #82AFFF;
+	display: none
+}
+::scrollbar-resizer {
+	background: #FF0BEE;
+}
+
