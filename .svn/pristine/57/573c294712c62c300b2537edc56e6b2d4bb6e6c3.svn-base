@@ -1,0 +1,671 @@
+<html>
+	<head>
+		<title>gisMapById</title>
+	</head>
+	<body>
+		<meta charset="UTF-8">
+    <meta name="renderer" content="webkit">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <meta http-equiv="Access-Control-Allow-Origin" content="*">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="format-detection" content="telephone=no">
+    <link rel="icon" href="favicon.ico">
+    <link href="css/layout/global.css" rel="stylesheet" />
+    <link href="css/layout/layout.css" rel="stylesheet" />
+    <script type="text/javascript" src="js/common/common.js"></script>
+    <script type="text/javascript" src="js/index/echarts.js"></script>
+     <script type="text/javascript" src="js/index/echarts-wordcloud.js"></script>
+
+    	<!--地图-->
+    <link rel="stylesheet" href="http://172.16.104.47:8084/arcgis_js_api/library/3.14/3.14/dijit/themes/nihilo/nihilo.css">
+    <link rel="stylesheet" href="http://172.16.104.47:8084/arcgis_js_api/library/3.14/3.14/esri/css/esri.css">
+    <script src="http://172.16.104.47:8084/arcgis_js_api/library/3.14/3.14/dojo/dojo.js" chartset="UTF-8"></script>
+    <script type="text/javascript" src="js/lib/jquery-3.3.1.min.js"></script>
+        
+    <link rel="stylesheet" href="css/gis/gisStyle.css" />
+     <!-- echarts -->
+    <script type="text/javascript" src="echarts.min.js"></script>
+    
+        
+    	<!--前后端分离-->
+	<script src="js/session.js"></script>
+	<script src="js/backservice.js"></script>
+	<script src="js/app.js"></script>
+    
+    
+    <style>
+      html
+        {
+         height:100%;
+         margin:0;
+        }
+        body
+        {
+            height:100%;
+            margin:0; 
+        }
+    	#map-area{
+    		width: 100%;
+    		height: 100%;
+    	}
+    </style>
+		<script src="layui/layui.all.js"></script>
+    <script>
+	    //加载层
+		var index = layer.load(0, {shade: false}); //0代表加载的风格，支持0-2
+		
+		var cars=[];
+        function add(num){
+        	
+        	var x=$(window.parent.document).find("#x").val();
+        	var y=$(window.parent.document).find("#y").val();
+        	var enterpriseName =$(window.parent.document).find("#enterpriseName").val();
+        	if(!num){
+        		num=1;
+        	}
+   
+            $("#map-area").html("");
+            require(["esri/map", "esri/layers/ArcGISTiledMapServiceLayer", "esri/layers/GraphicsLayer", "esri/layers/FeatureLayer",
+            "esri/dijit/Popup", "dijit/TooltipDialog", "esri/symbols/SimpleMarkerSymbol", "esri/symbols/PictureMarkerSymbol",
+            "esri/symbols/SimpleLineSymbol", "esri/symbols/SimpleFillSymbol", "esri/symbols/TextSymbol", "esri/renderers/ClassBreaksRenderer",
+            "esri/renderers/SimpleRenderer", "esri/InfoTemplate", "esri/SnappingManager", "esri/sniff",
+            "esri/Color", "esri/SpatialReference", "esri/graphic", "esri/tasks/query",
+            "esri/tasks/QueryTask", "esri/geometry/geodesicUtils", "esri/geometry/webMercatorUtils", "esri/units",
+            "esri/geometry/Polyline", "esri/toolbars/draw", "esri/toolbars/edit",
+            "dojo/keys", "dojo/on", "dojo/request", "dojo/_base/lang", "dojo/dom", "dojo/dom-attr", "dojo/dom-construct", "dojo/string",
+            "esri/layers/LabelClass", "esri/geometry/Point", "esri/geometry/Polygon", "dojo/domReady!"],
+            function (Map, ArcGISTiledMapServiceLayer, GraphicsLayer, FeatureLayer, Popup, TooltipDialog, SimpleMarkerSymbol, PictureMarkerSymbol,
+                SimpleLineSymbol, SimpleFillSymbol, TextSymbol, ClassBreaksRenderer, SimpleRenderer, InfoTemplate, SnappingManager,
+                has, Color, SpatialReference, Graphic, Query, QueryTask, geodesicUtils, webMercatorUtils, Units, Polyline, Draw, Edit, keys, on, request, lang, dom,
+                domAttr, domConstruct, string, LabelClass, Point, Polygon
+            ) {
+                //创建popup弹出层
+                var popup = new Popup(null, domConstruct.create("div"));
+
+                var map = new Map("map-area", {
+                    showLabels: true,
+                    logo: false,
+                    sliderStyle: "large",
+                    infoWindow: popup,
+                  /*  center: [113.147, 23.1],*/
+                	center:[x,y],
+                    zoom: 5
+                });
+                //定义动态地图服务图层
+                var tiled = new ArcGISTiledMapServiceLayer("http://172.16.104.47:6080/arcgis/rest/services/fs170615/MapServer");
+                map.addLayer(tiled);
+
+                // 定义 图像图层，是一个客户端展示的图层，可以将客户端绘制的图形，标记，文字，等等通过Graphic的方式展示。
+                var pointsArcCoordsLayer = new GraphicsLayer();
+                map.addLayer(pointsArcCoordsLayer);
+
+				//轨迹车 begin
+					
+				var carspeed = 10;
+				var points0 = randomLonandLat(1);
+				var carattr = ["images/gis/car.png", 20, 35];
+				//
+				var color0 = [0, 255, 0];
+				var points1 = randomLonandLat(2);
+				var data0="0";
+				var carattr = ["images/gis/car.png", 20, 35];
+				var color1 = [255, 0, 0];
+				var data1="1";
+				var points2 = randomLonandLat(3);
+				var carattr = ["images/gis/car.png", 20, 35];
+				var color2 = [255, 0, 255];
+				var data2="2";
+				////轨迹点数组,移动速度,小车属性,颜色（null为透明）
+				/*movementInit(points0, carspeed, carattr, color2,data0);
+				movementInit(points1,carspeed,carattr,color1,data1);
+				movementInit(points2,carspeed,carattr,color0,data2);*/
+				
+				movementInit(points0, carspeed, carattr, null,data0);
+				movementInit(points1,carspeed,carattr,null,data1);
+				movementInit(points2,carspeed,carattr,null,data2);
+				
+				//产生十个随机经纬度点坐标
+			function randomLonandLat(num) {
+				//117.144
+				//14:38:54.076 多车轨迹.html:53 36.262
+				//14:38:54.077 多车轨迹.html:51 117.352
+				//14:38:54.077 多车轨迹.html:53 36.35
+				//14:38:54.078 多车轨迹.html:51 116.948
+				//14:38:54.079 多车轨迹.html:53 37.157000000000004
+				var arr_jwd = [];
+			/*	  		for(var i = 0;i<10;i++){
+				  			var array_jdwd = [];
+				  			//经度
+				  			var lon = Math.random().toFixed(3)*(0.5)+112.747;
+				  			//纬度
+				  			var lat = Math.random().toFixed(3)*(0.5)+22.736;
+				  			console.log(lon);
+				  			
+				  			console.log(lat);
+				  			array_jdwd.push(lon);
+				  			array_jdwd.push(lat);
+				  			arr_jwd.push(array_jdwd);
+				  		}*/
+				 if(num==1){
+				 	arr_jwd.push(["113.18702987687799", "22.848510084787447"]);
+				 	arr_jwd.push(["112.84083973738238", "22.905654919168695"]);
+				 	arr_jwd.push(["113.1340256353934", "23.035094840514384"]);
+				 	arr_jwd.push(["113.08049436322344", "22.902194466611037"]);
+				 	arr_jwd.push(["112.928921916337", "22.886369406986466"]);
+				 	arr_jwd.push(["113.04138132584929", "23.07826538746981"]);
+				 	arr_jwd.push(["112.90467719326922", "23.294580845554856"]);
+				 	arr_jwd.push(["113.11072484809999", "23.024394308079527"]);
+				 	arr_jwd.push(["112.90467719326922", "23.294580845554856"]);
+				 }else if(num == 2){
+				 	arr_jwd.push(["113.1340256353934", "23.035094840514384"]);
+				 	arr_jwd.push(["112.84990669421379", "22.993530332310355"]);
+				 	arr_jwd.push(["112.84303609435355", "22.90662449415096"]);
+				 	arr_jwd.push(["112.86493786064618", "22.886892054791607"]);
+				 	arr_jwd.push(["112.90852118441544", "22.88901654372443"]);
+				 	arr_jwd.push(["112.84083973738238", "22.905654919168695"]);
+				 	arr_jwd.push(["113.1340256353934", "23.035094840514384"]);
+				 	arr_jwd.push(["112.8338272052516", "22.889353108437054"]);
+				 	arr_jwd.push(["112.84945448722022", "22.90434827054611"]);
+		
+				 }else{
+				 	arr_jwd.push(["113.22208329060762", "22.97976429978901"]);
+				 	arr_jwd.push(["113.15868601436385", "22.722465486863447"]);
+				 	arr_jwd.push(["113.18702987687799", "22.848510084787447"]);
+				 	arr_jwd.push(["113.18702987687799", "22.848510084787447"]);
+				 	arr_jwd.push(["113.1694665904635", "22.966660376502053"]);
+				 	arr_jwd.push(["113.08953019646389", "22.96587036427951"]);
+				 	arr_jwd.push(["113.216281853965", "22.82256854355128"]);
+				 	arr_jwd.push(["113.16371572752279", "22.68935665639624"]);
+				 	arr_jwd.push(["113.22208329060762", "22.97976429978901"]);
+				 }
+				 	
+                console.log(arr_jwd);
+				return arr_jwd;
+			}
+	
+	 		
+			var graphicOfCar;
+			/**
+			 * 移动轨迹
+			 * @param {Array[][]} moveTra   轨迹点数组： 例:[[116.895, 36.6513], [116.972, 36.773], [117.089212, 36.65343],……]
+			 * @param {Number} speed       移动速度：单位 ms
+			 * @param {Array[]}    attrCar      小车对象属性：例：["imageUrl",imageWidth,imageHeight]
+			 * 	
+			 */
+			function movementInit(moveTra, speed, attrCar, colorTra,data) {
+				require(
+					["esri/geometry/Point", "esri/symbols/PictureMarkerSymbol", "esri/geometry/Polyline", "esri/SpatialReference", "esri/symbols/SimpleLineSymbol",
+						"esri/graphic", "dojo/domReady!"
+					],
+					function(Point, PictureMarkerSymbol, Polyline, SpatialReference, SimpleLineSymbol, Graphic) {
+						//初始化轨迹  【选择保留】
+						var polyline = new Polyline(moveTra);
+						if(null == colorTra) {
+							var lineSymbol = new SimpleLineSymbol(SimpleLineSymbol.STYLE_DASH, new esri.Color([0, 255, 0,0]), 2);
+						} else {
+							var lineSymbol = new SimpleLineSymbol(SimpleLineSymbol.STYLE_DASH, new esri.Color(colorTra), 2);
+						}
+						var graphicOfLine = new Graphic(polyline, lineSymbol);
+						
+						pointsArcCoordsLayer.add(graphicOfLine);
+						//初始化小车对象
+						var point = new Point(moveTra[0][0], moveTra[0][1]);
+						var pictureMarkerSymbol = new PictureMarkerSymbol(attrCar[0], attrCar[1], attrCar[2]);
+						graphicOfCar = new Graphic(point, pictureMarkerSymbol);
+						
+						graphicOfCar.lineColor=graphicOfLine;
+						graphicOfCar.car=data;
+						graphicOfCar.flag=1;
+						cars.push(graphicOfLine);
+						
+						pointsArcCoordsLayer.add(graphicOfCar);
+						graphicOfCar.geometry.x = moveTra[0][0];
+						graphicOfCar.geometry.y = moveTra[0][1];
+						move(0, 1, speed, graphicOfCar, moveTra);
+					}
+				)
+			}
+			//根据序列点坐标 进行移动  
+			function move(start, end, rush, car, points) {
+				//先算第一个点和第二个点的关系  之后一次算每个点和下一个点的关系
+				var x1 = points[start][0];
+				var y1 = points[start][1];
+				var x2 = points[end][0];
+				var y2 = points[end][1];
+				var p = (y2 - y1) / (x2 - x1); //斜率
+				var v = 0.00005; //距离  距离越小 位置越精确
+
+				var moving = setInterval(function() {
+					//分别计算 x,y轴方向速度
+					if(Math.abs(p) == Number.POSITIVE_INFINITY) { //无穷大
+						car.geometry.y += v;
+					} else {
+						if(x2 < x1) {
+							car.geometry.x -= (1 / Math.sqrt(1 + p * p)) * v;
+							car.geometry.y -= (p / Math.sqrt(1 + p * p)) * v;
+							//计算汽车角度 
+							car.symbol.angle = CalulateXYAnagle(x1, y1, x2, y2);
+						} else {
+							car.geometry.x += (1 / Math.sqrt(1 + p * p)) * v;
+							car.geometry.y += (p / Math.sqrt(1 + p * p)) * v;
+							//计算汽车角度 
+							car.symbol.angle = CalulateXYAnagle(x1, y1, x2, y2);
+						}
+					}
+					//
+					//图层刷新 
+					pointsArcCoordsLayer.redraw();
+					if(Math.abs(car.geometry.x - x2) <= v && Math.abs(car.geometry.y - y2) <= v) {
+						clearInterval(moving);
+						start++;
+						end++;
+						if(end < points.length)
+							move(start, end, rush, car, points);
+					}
+				}, rush);
+			}
+			//计算小车移动角度              
+			function CalulateXYAnagle(startx, starty, endx, endy) {
+				//车头旋转角度（根据图片调整）
+				var tan = Math.atan(Math.abs((endy - starty) / (endx - startx))) * 180 / Math.PI + 90; 
+				if(endx > startx && endy > starty) { //第一象限  
+					return -tan + 180;
+				} else if(endx > startx && endy < starty) { //第二象限   
+					return tan;
+				} else if(endx < startx && endy > starty) { //第三象限    
+					return tan - 180;
+				} else { //第四象限  
+					return -tan;
+				}
+			}
+
+			//向小车添加自定义属性
+			function setAttrForGraphic(graphic, attr) {
+				if(isObjectNull(graphic)) {
+					return;
+				}
+				var attrold = graphic.attributes;
+				if(attrold != null && attrold != undefined) {
+					for(var p in attr) {
+						attrold[p] = attr[p];
+					}
+					attr = attrold;
+				}
+				graphic.setAttributes(attr);
+			}
+			//读取小车的自定义属性
+			function getAttrForGraphic(graphic) {
+				if(isObjectNull(graphic)) {
+					return;
+				}
+				return graphic.attributes;
+			}
+			//更改地图颜色
+			function updateColor(){
+				//图层刷新 
+				pointsArcCoordsLayer.redraw();
+			}
+				
+				//轨迹车 end "images/point_icon.png"
+                //定义标志，以及标志长宽  000000.gif
+                var pictureSymbol = new PictureMarkerSymbol("images/point_icon.png", 30, 30);
+
+                //通过JSON数组遍历坐标点
+
+                console.log("num"+num);
+                console.log(x);
+                console.log(y);
+                var newPoint = new Point(x,y, map.spatialReference);
+                var graphic = new Graphic(newPoint, pictureSymbol);
+                //给图形绑定上特定的值
+                graphic.id = num
+                graphic.enterpriseName = enterpriseName;
+                //graphic.show();
+                console.log("pointsArcCoordsLayer");
+                console.log(pointsArcCoordsLayer);
+                pointsArcCoordsLayer.add(graphic);
+                   
+                   //固定点-----
+                   
+                var dataForGis=
+                	[
+                		{"name":"高明孔堂","x":"112.824844","y":"22.873791","type":"空气监测站"},
+		                { "name": "华材职中", "x": "113.0191", "y": "22.98017","type":"空气监测站"},
+		                { "name": "南海气象局", "x": "113.148177", "y": "23.040194","type":"空气监测站"},
+		                { "name": "华容街道办", "x": "113.264858", "y": "22.768502","type":"空气监测站"},
+		                { "name": "三水云东海", "x": "112.884595", "y": "23.21833","type":"空气监测站"},
+		                { "name": "顺德苏岗", "x": "113.30658", "y": "22.813256","type":"空气监测站"},
+                		{"name":"佛山市实验学校小学部","y":"22.8094100000","x":"113.2539900000","type":"学校"},
+						{"name":"佛山市元甲学校","y":"113.1110500000","x":"23.0183200000","type":"学校"},
+						{"name":"佛山市同济小学","y":"23.0031300000","x":"113.1110500000","type":"学校"},
+						{"name":"佛山市第九小学","y":"22.8094100000","x":"112.9993400000","type":"学校"},
+						{"name":"佛山市南海实验小学","y":"23.0616700000","x":"113.1448900000","type":"学校"},
+						{"name":"佛山市铁军小学","y":"23.0330000000","x":"113.1146600000","type":"学校"},
+						{"name":"佛山市南海桂园小学","y":"23.0222600000","x":"113.1896500000","type":"学校"},
+						{"name":"佛山市南海区桂城花苑小学","y":"23.0305100000","x":"113.1534900000","type":"学校"},
+						{"name":"佛山市桂城海三路小学","x":"113.1307000000","x":"23.0487600000","type":"学校"},
+						{"name":"佛山市南海桂园小学","y":"23.0222600000","x":"113.1896500000","type":"学校"},
+						{"name":"佛山市禅城区同济医院","y":"23.0229490000","x":"113.1297300000","type":"医院"},
+               			{"name":"南庄镇梧村社区卫生服务站","y":"22.9412100000","x":"113.0453200000","type":"医院"},
+               			{"name":"佛山市顺德区乐从医院水藤分院","y":"22.9530200000","x":"113.0833800000","type":"医院"},
+               			{"name":"顺德健民肛肠医院","y":"22.8210600000","x":"113.2694700000","type":"医院"},
+               			{"name":"佛山市高明区新市医院","y":"22.8509200000","x":"112.6918700000","type":"医院"},
+               			{"name":"佛山市高明区明城华立医院","y":"22.8555100000","x":"112.7047200000","type":"医院"},
+               			{"name":"佛山市三水区疾病预防控制中心","y":"23.1855960000","x":"112.8923330000","type":"医院"},
+               			{"name":"佛山市三水区青岐卫生院","y":" 23.2060300000","x":"112.7820800000","type":"医院"},
+               			{"name":"佛山百花广场","y":"23.0264840000","x":"113.1117110000","type":"商店"},
+               			{"name":"佛山三水新动力广场","y":"23.1731800000","x":"112.8687900000","type":"商店"},
+               			{"name":"佛山南海万达广场","y":"23.0632100000","x":"113.1574060000","type":"商店"},
+                		{"name":"西樵山国家森林公园","x":"112.9777765274","y":"22.9254330030","type":"森林"},
+						{"name":"西岸森林生态园风景区","x":"112.8792858124","y":"22.8537146565","type":"森林"},
+						{"name":"三山郊野公园","x":"113.2285308838","y":"23.0301352291","type":"森林"},
+						{"name":"佛山站","x":"113.1035614014","y":"23.0449845150","type":"人员聚集地"},
+						{"name":"佛山西站","x":"113.0376434326","y":"23.0781525368","type":"人员聚集地"},
+						{"name":"海中公园","x":"113.2038116455","y":"23.0528824044","type":"人员聚集地"},
+						{"name":"陈村镇","x":"113.2355690002","y":"22.9542835970","type":"村庄"},
+						{"name":"大沥镇","x":"113.1114578247","y":"23.1097335250","type":"村庄"},
+						{name: "佛山市顺德区新希电镀电器有限公司", x: "113.32564489044397", y: "22.765045256582448", type: "排污口"},
+						{name: "佛山市南海区狮山镇松岗污水处理有限公司", x: "113.07071557293667", y: "23.064674405398919", type: "排污口"},
+						{name: "佛山市三水区白坭镇生活污水处理厂", x: "112.84310186918128", y: "23.06967980663332", type: "排污口"},
+						{name: "佛山市德庆污水处理有限公司", x: "113.1340256353934", y: "23.035094840514384", type: "排污口"},
+						{name: "佛山市顺德区华都水务有限公司", x: "113.18702987687799", y: "22.848510084787447", type: "排污口"},
+						{name: "佛山市顺德区新城区污水处理厂", x: "113.18702987687799", y: "22.848510084787447", type: "排污口"},
+						{name: "佛山市顺德区源润水务环保有限公司", x: "113.18702987687799", y: "22.848510084787447", type: "排污口"},
+						{name: "万江水厂", x: "112.9216619010383", y: "22.955159106172798", type: "饮用水源地"},
+						{name: "樟村水厂", x: "113.18702987687799", y: "22.848510084787447", type: "饮用水源地"}
+                	];
+                
+      
+                 //村庄
+                var gis_village = new PictureMarkerSymbol("images/gis/gis_village.png", 15, 15);
+                //执法车
+                var gis_spedoff = new PictureMarkerSymbol("images/gis/gis_spedoff.png", 15, 15);
+                //商店
+                var gis_shop = new PictureMarkerSymbol("images/gis/gis_shop.png", 15, 15);
+                //学校
+                var gis_school = new PictureMarkerSymbol("images/gis/gis_school.png", 15, 15);
+                //医院
+                var gis_hospital = new PictureMarkerSymbol("images/gis/gis_hospital.png", 15, 15);
+                //饮用水源地
+                var gis_headwaters = new PictureMarkerSymbol("images/gis/gis_headwaters.png", 15, 15);
+                //森林
+                var gis_forest = new PictureMarkerSymbol("images/gis/gis_forest.png", 15, 15);
+                //排污口
+                var gis_drain = new PictureMarkerSymbol("images/gis/gis_drain.png", 15, 15);
+                //空气监测站
+                var gis_airstation = new PictureMarkerSymbol("images/gis/gis_airstation.png", 15, 15);
+                for (var i = 0; i <dataForGis.length; i++) {
+                    //console.log(data.data.polluSourCtroList[i].risk);
+                    var newPoint = new Point(dataForGis[i].x, dataForGis[i].y, map.spatialReference);
+                  
+                    if(dataForGis[i].type=="商店") {
+                        graphic = new Graphic(newPoint, gis_shop);
+                     }else if(dataForGis[i].type=="学校"){
+                     	graphic = new Graphic(newPoint, gis_school);
+                     }else if(dataForGis[i].type=="空气监测站"){
+                     	graphic = new Graphic(newPoint, gis_airstation);
+                     }else if(dataForGis[i].type=="医院"){
+                     	graphic = new Graphic(newPoint, gis_hospital);
+                     }else if(dataForGis[i].type=="饮用水源地"){
+                     	graphic = new Graphic(newPoint, gis_headwaters);
+                     }else if(dataForGis[i].type=="排污口"){
+                     	graphic = new Graphic(newPoint, gis_drain);
+                     }else if(dataForGis[i].type=="森林"){
+                     	graphic = new Graphic(newPoint, gis_forest);
+                     }else if(dataForGis[i].type=="人员聚集地"){
+                     	graphic = new Graphic(newPoint, gis_forest);
+                     }else if(dataForGis[i].type=="村庄"){
+                     	graphic = new Graphic(newPoint, gis_village);
+                     }else{
+                        graphic = new Graphic(newPoint, gis_drain);
+                    }
+                     graphic.data=dataForGis[i];
+                    graphic.show();
+                    pointsArcCoordsLayer.add(graphic);
+
+                }
+                
+                
+                
+                pointsArcCoordsLayer.show();
+                
+                layer.close(index);
+                // 给标志点监听点击事件，并且加上自定义弹出框,样式为黑色弹框
+                pointsArcCoordsLayer.on("click", function (e) {
+                	
+                  	if(e.graphic.enterpriseName){
+                  		idOpen(e);
+                  	}else if(e.graphic.car){
+                  		carLineOpen(e);
+                  	}else{
+                  		pointOpen(e);
+                  	}
+                });
+                function carLineOpen(e){
+                	if(e.graphic.flag==1){
+                		if(e.graphic.car == 0){
+                			e.graphic.lineColor.symbol.color="#ff2b2b";
+                		}else if(e.graphic.car == 1){
+                			e.graphic.lineColor.symbol.color="#ffc832";
+                		}else{
+                			e.graphic.lineColor.symbol.color="#00bcd4";
+                		}
+                		
+                		e.graphic.flag=2;
+                	}else{
+                		e.graphic.lineColor.symbol.color=new esri.Color([0, 255, 0,0]);
+                		e.graphic.flag=1;
+                	}
+                	updateColor();
+                	
+                }
+                function pointOpen(e){
+                	
+                	var eData=e.graphic.data;
+            	  var detailInfo =
+                    '<div style="width: 80%;text-align: center;">' +
+                    '<table style="position: relative;left: 10%;">' +
+                    '<tr style="height: 10px;"></tr><tr>' +
+                    '<td style="width: 35%;background-color: #029ce1;color: #fff;padding: 2px 4px;" >' + '名字:' +eData.name + '</td>' +
+                   '</tr >' +'<tr style="height: 10px;"></tr>'+
+                    '<tr>' +
+                    '<td style="width: 35%;background-color: #029ce1;color: #fff;padding: 2px 4px;">' +'经度:' +eData.x + '</td>' +
+                    '<tr>' +
+                    '<td style="width: 35%;background-color: #029ce1;color: #fff;padding: 2px 4px;">' + '纬度:' +eData.y + '</td>' +
+                    '</tr>' +
+                    '</table >' +
+                    '</div>';
+                    console.log(detailInfo)
+                    popup.setTitle(eData.type);
+                    popup.setContent(detailInfo);
+                    popup.show(e.mapPoint);
+                    //设置弹出框内编剧
+                    //contentPane
+             
+                      $(".title").css({
+                    	"width":"220px", "whiteSpace":"nowrap", "overflow":"hidden","textOverflow":"ellipsis",
+                    });
+                    $(".actionsPane").css({ "display": "none" });
+                     $(".contentPane").css({
+                    	"backgroundColor": "#0a1227","padding":"0px","overflow":"hidden","height":"150px"
+                    	,"width": "300px"
+                    });
+                    $(".esriPopupWrapper").css({
+                    	"width": "300px"
+                    });
+                    $(".sizer .titleButton.maximize").addClass("hidden");
+					  $(".sizer").css({
+                    	"backgroundColor": "","width": "270px"
+                    });
+					$(".titlePane").css({
+						"backgroundColor":" #0a1227","textAlign": "center","width": "294px"
+					});
+					$(".actionsPane").css({ "display": "none" });
+					$(".close").css({
+						"right":"-25px"
+					});
+					  $(".content").css({          	
+    					"width": "100%","height": "100%"
+                   });
+					$(".outerPointer").css({
+					    "backgroundColor": "#0a1227",
+					    "z-index": "99",
+					    "boxShadow":" #050f1e 0px 0px",
+                   });
+                }
+                function idOpen(e){
+                	  //空气污染情况
+                    var supervisiontype;
+                    switch (e.graphic.supervisiontype) {
+                        case ("1"):
+                            //alert(1)
+                            supervisiontype = "优良";
+                            break;
+                        case ("2"):
+                            //alert(2)
+                            supervisiontype = "良好";
+                            break;
+                        case ("3"):
+                            // alert(3)
+                            supervisiontype = "不合格";
+                            break;
+                        default: supervisiontype = "无";
+                    }
+                    //国控省控市控
+                    var risk = e.graphic.tisk == "1" ? "国控" : e.graphic.tisk == "2" ? "省控" : e.graphic.tisk == "3" ? "市控" : "无";
+
+                    //console.log(e.graphic.id)
+                    var detailInfo =
+                        //'<div style="background:linear-gradient(#444444, rgb(252, 252, 252));">' +
+                        '<div style="width: 100%;">' +
+                        '<table border = "0" style="color: #fff;text-align:center;font-size: 12px;padding: 5px;">' +
+                        '<tr>' +
+                        '<td style="width: 35%;">' + '空气质量' + '</td>' +
+                        '<td style=" width: 15%;color: #ffeb00;font-weight: bold;">' + supervisiontype + '</td>' +
+                        '<td style="width: 15%;"></td>'+
+                        '<td style="text-align:left;">企业类型: ' + risk + '</td>' +
+                        '</tr >' +
+                        '<tr>' +
+                        '<td>' + '水质量' + '</td>' +
+                        '<td style=" width: 15%;color: #ffeb00;font-weight: bold;">' + '暂无' + '</td>' +
+                        '<td style="width: 15%;"></td>'+
+                        '<td style="text-align:left;">地址: ' + e.graphic.enterpriseName + '</td>' +
+                        '</tr>' +
+                        '<tr>' +
+                        '<td colspan="4" style=" font-size: 18px;font-weight: bold;">24小时废气排放监控折线图</td></tr> ' +
+                        '<tr>' +
+                        '<td colspan="4">' +
+                        '<div id="line" style="height:200%;width:100%;position:  relative;top: -50px;"></div>' +
+                        '</td>'
+                    '</tr>' +
+                        '</table >' +
+                        '</div>';
+                    /// 保留
+                    var str = '地址:' + e.graphic.cityName + e.graphic.area + e.graphic.enterpriseName +
+                        '空气质量达标情况:' + supervisiontype + '<br>' +
+                        '企业属性:' + risk +
+                        '水质量达标情况:' + '暂无' +
+                        //---------------折线图----------------
+                        '<div id="line" style="height: 150%"></div>';
+                    //--------------折线图 END-----------
+                    popup.setTitle(e.graphic.enterpriseName);
+                    popup.setContent(detailInfo);
+                    popup.show(e.mapPoint);
+                    //设置弹出框内编剧
+                    //contentPane
+                    //渲染Echarts折线图
+                    
+                    lineChart(e.graphic.id);
+                    //
+                    $(".esriPopupWrapper").css({
+                    	"position": "absolute","left": "16px","top": "-60px","width": "337px"
+                    });
+                    $(".sizer").css({
+                    	"backgroundColor": "#02a2e9","width": "338px"
+                    });
+                    $(".title").css({
+                    	"width":"320px", "whiteSpace":"nowrap", "overflow":"hidden","textOverflow":"ellipsis"
+                    });
+                    $(".titlePane").css({"backgroundColor": "#fff0"});
+                    $(".maximize").css({ "display": "none" });
+                    $(".contentPane").css({
+                    	"backgroundColor": "#050f1e","color": "#fff","fontSize": "12px"
+                    	,"overflow":"hidden","height":"230px","width": "320px"
+                    });
+				
+                   $(".content").css({          	
+    					"border": "1px solid #02a2e9","fontSize": "12px","width": "100%","height": "100%"
+                   });
+				   $(".close").css({
+						"right":"3px"
+					});
+                   $(".actionsPane").css({ "display": "none" });
+                   $(".outerPointer").css({
+					    "backgroundColor": "#050f1e",
+					    "z-index": "99",
+					    "boxShadow":" #050f1e 0px 0px",
+					    "borderBottom": "#02a2e9 solid 1px",
+					    "borderLeft": "#02a2e9 solid 1px"
+                   });
+                }
+/*                map.on("mouse-move", function(e){
+                	
+					//console.log(e);
+				});*/
+                
+            }
+        );
+
+        //渲染折线图
+        function lineChart(array) {
+            var dom = document.getElementById("line");
+            var myChart = echarts.init(dom);
+            var app = {};
+            option = null;
+            option = {
+                title: {
+                    text: ' '
+                },tooltip: {
+	                formatter: "{c}mg/h"
+	               
+	            },xAxis: {
+                    type: 'category',
+                    boundaryGap: false,
+                    data: ['0', '3', '6', '9', '12', '15', '18']
+                },
+                // legend: {
+                //     data: ['排放量']
+                // },
+                yAxis: {
+                    type: 'value'
+                },
+                axisLabel: {
+				color: "#ff0" //改变XY轴字体颜色
+				},
+                series: [{
+                    name: "排放量",
+                    data: [array, array + 1, array + 3, array + 2, 7, 8, 9],
+                    type: 'line',
+                    areaStyle: {}
+                }]
+            };
+            ;
+            if (option && typeof option === "object") {
+                myChart.setOption(option, true);
+            }
+
+            }
+        };
+        add(1);
+        //轨迹车 begin
+        
+        
+    </script>
+   
+        <!--中间部分的地图-->
+        <div id="map-area"></div>
+
+	</body>
+</html>

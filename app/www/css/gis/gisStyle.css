@@ -1,0 +1,14 @@
+/***地图放大放小的标尺**/
+.dijitSliderRemainingBar {
+	background-color: #fff;
+}
+
+.dijitSliderBar {
+	border-color: #fff;
+}
+.dijitSliderButtonInner {
+	color: #fff;
+}
+.dijitRuleMark {
+	border: 1px solid #fff
+}

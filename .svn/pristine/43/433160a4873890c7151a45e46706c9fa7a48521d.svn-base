@@ -1,0 +1,205 @@
+html,
+body {
+	width: 100%;
+	height: 100%;
+	margin: 0;
+	padding: 0;
+}
+body {
+	background: url('../../images/test1/bg.jpg') no-repeat;
+	background-size: 100% 100%;
+	display: flex;
+	flex-direction: row;
+	font-family: "Microsoft Yahei";
+	overflow: hidden;
+}
+body {
+	/*  background-color: #0e1742;*/
+}
+.splitter {
+	width: 0.44vw;
+	min-width: 7px;
+	background-color: #055a86;
+	position: relative;
+}
+.splitter .handler {
+	background: #49d9fe url('../../../image/demo/iep/query/splitter-handler.gif') no-repeat center center;
+	box-sizing: border-box;
+	border: solid 2px #49d9fe;
+	width: 100%;
+	height: 12vh;
+	border-radius: 9999px;
+	position: absolute;
+	left: 0;
+	top: 50%;
+	margin-top: -4vh;
+}
+.workarea {
+	flex: 1;
+	overflow-y: auto;
+}
+
+.query-pane {
+	color: white;
+	font-size: 20px;
+	display: flex;
+	padding: 2vh 1.14vw;
+}
+
+.query-pane form {
+	margin: 0;
+	padding: 0;
+	padding: 2vh 1.14vw;
+	padding-bottom: 0;
+}
+.query-pane .field {
+	box-sizing: border-box;
+	/* float: left;*/
+	width: 33%;
+	white-space: nowrap;
+	display: flex;
+	align-items: center;
+	padding-right: 1em;
+	padding-bottom: 0.5em;
+}
+.query-pane .field label {
+	font-size: 18px;
+}
+.query-pane .field label::after {
+	content: ':';
+	margin-right: 7px;
+}
+.query-pane .field input {
+	border: solid 1px #056a9f;
+	border-radius: 7px;
+	background-color: transparent;
+	line-height: 2em;
+	padding: 0 0 0 1em;
+	max-width: 15vw;
+	flex: 1;
+	color: #fff;
+	font-size: 14px;
+}
+.query-pane .field input::placeholder {
+	/* color: whitesmoke;*/
+}
+.query-pane .op {
+	clear: both;
+	padding: 19px;
+	text-align: center;
+}
+.query-pane .op button {
+	border-radius: 7px;
+	border: solid 1px #02a2e9;
+	color: #02a2e9;
+	background: transparent;
+	line-height: 28px;
+	height: 30px;
+	box-sizing: border-box;
+	padding: 0 16px;
+	margin: 0 1.2vw;
+}
+.query-pane .op button::before {
+	content: '';
+	display: inline-block;
+	width: 24px;
+	height: 24px;
+	background-repeat: no-repeat;
+	background-size: contain;
+	vertical-align: middle;
+	margin-right: 4px;
+}
+.query-pane .op button[type=submit] {
+	color: white;
+	background-color: rgba(2, 162, 233, 0.6);
+}
+.query-pane .op button::before {
+	background-image: url('../../images/test1/i-search.png');
+}
+
+.grid {
+	padding: 1.14vw;
+	font-size: 20px;
+}
+.grid table {
+	box-sizing: border-box;
+	width: 100%;
+}
+.grid th,
+.grid td {
+	color: white;
+	text-align: center;
+}
+.grid td.op a {
+	color: white;
+	text-decoration: none;
+	margin: 0 .64em;
+}
+.grid tbody tr:nth-child(odd) {
+	background-color: rgba(2, 162, 233, 0.3);
+}
+.grid table {
+	border: 1px solid #02a2e9;
+	border-collapse: separate;
+	border-left: 0;
+	border-radius: 7px;
+	border-spacing: 0px;
+}
+.grid thead {
+	display: table-header-group;
+	vertical-align: middle;
+	border-color: inherit;
+	border-collapse: separate;
+}
+.grid tr {
+	display: table-row;
+	vertical-align: inherit;
+	border-color: inherit;
+}
+.grid th,
+.grid td {
+	padding: 5px 4px 6px 4px;
+	border-left: 1px solid #02a2e9;
+	white-space: nowrap;
+}
+.grid thead:first-child tr:first-child th:first-child,
+.grid tbody:first-child tr:first-child td:first-child {
+	border-radius: 7px 0 0 0;
+}
+.grid thead:last-child tr:last-child th:first-child,
+.grid tbody:last-child tr:last-child td:first-child {
+	border-radius: 0 0 0 7px;
+}
+
+@media only screen and (max-width: 1200px) {
+	.query-pane {
+		font-size: 14px;
+	}
+	.query-pane .field input {
+		width: 140px;
+	}
+	.query-pane .op button {
+		line-height: 28px;
+		height: 30px;
+	}
+	.query-pane .op button::before {
+		width: 18px;
+		height: 18px;
+	}
+
+	.grid {
+		font-size: 14px;
+	}
+}
+@media only screen and (max-width: 900px) {
+	.query-pane .field label {
+		font-size: 13px;
+	}
+}
+@media only screen and (max-height: 700px) {
+	.query-pane .op {
+		padding-top: 12px;
+		padding-bottom: 0px;
+	}
+
+}

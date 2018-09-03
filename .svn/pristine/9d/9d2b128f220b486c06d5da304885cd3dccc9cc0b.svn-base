@@ -1,0 +1,5 @@
+jdbc_url=jdbc:mysql://xpzed.asuscomm.com:3306/envir?user=autoui&password=Bigdata_1\
+  &zeroDateTimeBehavior=convertToNull&characterEncoding=UTF-8&characterSetResults=UTF-8
+#jdbc_url=jdbc:mysql://47.106.195.105:3306/envir?user=envir&password=Bigdata_1\
+#  &zeroDateTimeBehavior=convertToNull&characterEncoding=UTF-8&characterSetResults=UTF-8
+idleConnectionTestPeriodInSeconds=600

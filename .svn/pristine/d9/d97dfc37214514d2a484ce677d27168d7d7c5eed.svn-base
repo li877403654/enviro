@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!--
+    @author zzl
+    @version 1.0 Jun 12, 2018
+-->
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="envir.sys.entity.Msg">
+
+    <select id="getMaxId" resultType="Integer">
+        select max(id) from t_msg
+    </select>
+
+</mapper>

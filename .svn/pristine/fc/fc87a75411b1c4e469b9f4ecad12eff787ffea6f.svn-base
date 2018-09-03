@@ -1,0 +1,426 @@
+<!DOCTYPE html>
+<html>
+
+<head lang="en">
+    <meta charset="UTF-8">
+    <meta name="renderer" content="webkit">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <meta http-equiv="Access-Control-Allow-Origin" content="*">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="format-detection" content="telephone=no">
+    <link rel="icon" href="favicon.ico">
+    <link href="css/test/global.css" rel="stylesheet" />
+    <link href="css/test/layout.css" rel="stylesheet" />
+    <script type="text/javascript" src="js/common/common.js"></script>
+    <script type="text/javascript" src="js/index/echarts.js"></script>
+    <script type="text/javascript" src="js/index/echarts-wordcloud.js"></script>
+
+    <!-- echarts -->
+    <script type="text/javascript" src="echarts.min.js"></script>
+
+    <!--<script type="text/javascript" src="js/index.js"></script>-->
+    <title>设计院智慧环保一张图</title>
+	<!--地图-->
+    <link rel="stylesheet" href="http://172.16.104.47:8084/arcgis_js_api/library/3.14/3.14/dijit/themes/nihilo/nihilo.css">
+    <link rel="stylesheet" href="http://172.16.104.47:8084/arcgis_js_api/library/3.14/3.14/esri/css/esri.css">
+    <script src="http://172.16.104.47:8084/arcgis_js_api/library/3.14/3.14/dojo/dojo.js" chartset="UTF-8"></script>
+    <script type="text/javascript" src="js/lib/jquery-3.3.1.min.js"></script>
+    
+	<link href="css/gis/gisStyle.css" rel="stylesheet" />
+    
+    	<!--前后端分离-->
+	<script src="js/session.js"></script>
+	<script src="js/backservice.js"></script>
+	<script src="js/app.js"></script>
+    
+ 	<style>
+		  html
+        {
+         height:100%;
+         margin:0;
+         
+        }
+        body
+        {
+            height:100%;
+            margin:0; 
+        }
+		#map-area{
+    		width: 100%;
+    		height: 100%;
+    	}
+    	/* 黄雄: 放大缩小按钮*/
+		 .big_small_logo{
+		 	position: absolute;
+		 	top: 5px;
+		 	right: 5px;
+		 	width: 25px;
+		 	height: 25px;
+		 	z-index: 99;
+		 }
+		 .big_small_logo span{
+		 	display: inline-block;
+		 	height: 100%;
+		 	width: 100%;
+		 	cursor: pointer;
+		 }
+		 .big_small_logo .small_logo{
+		 	display: none;
+		 }
+
+
+/*		#bg{
+			position: absolute;
+			width: 100%;
+			height: 100%;
+			z-index: 99;
+		}*/
+		
+		/* 隐藏放大按钮 */
+/*		.esriLargeSliderVertical{
+			display: none;
+		}*/
+	</style>
+    
+	<script src="layui/layui.all.js"></script>
+
+	
+	<script>
+	var arrays=[];
+	var data =[];
+//加载层
+	var index = layer.load(0, {shade: false}); //0代表加载的风格，支持0-2
+    	var airLevel=["优","良","差","无"];
+    	var airGraphics=[];
+        var newPoint; 
+        var graphic; 
+        var pointsArcCoordsLayer;
+        var map;
+        
+        //logo
+         var triangle_green;
+        var triangle_yellow;
+        var triangle_red ;
+        var triangle_black;
+            function showAirPoint(){
+			    	var tr=$(window.parent.document).find("#company tr");
+	   				var airType=$(window.parent.document).find("#airType").val();
+					console.log(tr);
+					var level=[];
+					var value=[];
+		    		$.each(tr,function(k,v){
+		    			value[k]=$(v).children("td").eq(1).text();
+		    			level[k]=$(v).children("td").eq(2).text();
+		    		});
+	                data = [
+                		{"name":"高明孔堂","x":"112.824844","y":"22.873791","type":airType,"level":level[1],"value":value[1]},
+		                { "name": "华材职中", "x": "113.0191", "y": "22.98017" ,"type":airType,"level":level[2],"value":value[2]},
+		                { "name": "南海气象局", "x": "113.148177", "y": "23.040194" ,"type":airType,"level":level[3],"value":value[3]},
+		                { "name": "华容街道办", "x": "113.264858", "y": "22.768502" ,"type":airType,"level":level[4],"value":value[4]},
+		                { "name": "三水云东海", "x": "112.884595", "y": "23.21833" ,"type":airType,"level":level[5],"value":value[5]},
+		                { "name": "顺德苏岗", "x": "113.30658", "y": "22.813256" ,"type":airType,"level":level[6],"value":value[6]}];
+		                
+		             
+                     for (var i = 0; i < data.length; i++) {
+                        //console.log(data.data.polluSourCtroList[i].risk);
+                        if(data[i].level==airLevel[0]){
+                        	airGraphics[i].setSymbol(triangle_green);
+                        }else if(data[i].level==airLevel[1]){
+                        	airGraphics[i].setSymbol(triangle_yellow);
+                        }else if(data[i].level==airLevel[2]){
+                        	airGraphics[i].setSymbol(triangle_red);
+                        }else{
+                        	airGraphics[i].setSymbol(triangle_black);
+                        }
+                      	 airGraphics[i].data=data[i];
+                    } 
+                    //图层刷新 
+					pointsArcCoordsLayer.redraw();
+			    }
+        
+        require(["esri/map", "esri/layers/ArcGISTiledMapServiceLayer", "esri/layers/GraphicsLayer", "esri/layers/FeatureLayer",
+            "esri/dijit/Popup", "dijit/TooltipDialog", "esri/symbols/SimpleMarkerSymbol", "esri/symbols/PictureMarkerSymbol",
+            "esri/symbols/SimpleLineSymbol", "esri/symbols/SimpleFillSymbol", "esri/symbols/TextSymbol", "esri/renderers/ClassBreaksRenderer",
+            "esri/renderers/SimpleRenderer", "esri/InfoTemplate", "esri/SnappingManager", "esri/sniff",
+            "esri/Color", "esri/SpatialReference", "esri/graphic", "esri/tasks/query",
+            "esri/tasks/QueryTask", "esri/geometry/geodesicUtils", "esri/geometry/webMercatorUtils", "esri/units",
+            "esri/geometry/Polyline", "esri/toolbars/draw", "esri/toolbars/edit",
+            "dojo/keys", "dojo/on", "dojo/request", "dojo/_base/lang", "dojo/dom", "dojo/dom-attr", "dojo/dom-construct", "dojo/string",
+            "esri/layers/LabelClass", "esri/geometry/Point", "esri/geometry/Polygon", "dojo/domReady!"],
+            function (Map, ArcGISTiledMapServiceLayer, GraphicsLayer, FeatureLayer, Popup, TooltipDialog, SimpleMarkerSymbol, PictureMarkerSymbol,
+                SimpleLineSymbol, SimpleFillSymbol, TextSymbol, ClassBreaksRenderer, SimpleRenderer, InfoTemplate, SnappingManager,
+                has, Color, SpatialReference, Graphic, Query, QueryTask, geodesicUtils, webMercatorUtils, Units, Polyline, Draw, Edit, keys, on, request, lang, dom,
+                domAttr, domConstruct, string, LabelClass, Point, Polygon
+            ) {
+
+                //创建popup弹出层
+                var popup = new Popup(null, domConstruct.create("div"));
+
+                map = new Map("map-area", {
+                    showLabels: true,
+                    logo: false,
+                    sliderStyle: "large",
+                    infoWindow: popup,
+                    center: [113.147, 23.036],
+                    zoom: 0
+                });
+                
+               
+                //定义动态地图服务图层
+                //http://61.144.66.25:8004/arcgis/rest/services/fs170615/MapServer
+                var tiled = new ArcGISTiledMapServiceLayer("http://61.144.66.25:8004/arcgis/rest/services/fs170615/MapServer");
+                map.addLayer(tiled);
+
+                // 定义 图像图层，是一个客户端展示的图层，可以将客户端绘制的图形，标记，文字，等等通过Graphic的方式展示。
+                pointsArcCoordsLayer = new GraphicsLayer();
+                map.addLayer(pointsArcCoordsLayer);
+
+                /*高明孔堂 112.824844, 22.873791
+			                华材职中 113.0191 22.98017
+			                南海气象局 113.148177, 23.040194
+			                华容街道办 113.264858, 22.768502
+			                三水云东海 112.884595, 23.21833
+			                顺德苏岗 113.30658, 22.813256  */
+			     
+			     /********风 begin***********/
+			     
+			      //鼠标滚动事件 监听
+				/*map.on("mouse-wheel", function(e){
+					//_params
+					
+					setTimeout(function () { 
+						console.log(map.getZoom());
+						if(map.getZoom()==0){
+							$.each(arrays,function(k,v){
+								v.show();
+							});
+						}else{
+							$.each(arrays,function(k,v){
+								v.hide();
+							});
+						}
+					}, 500);
+						
+					
+				});*/
+				//监听 zoom 改变事件
+			    map.on("zoom",function(e){
+			    	setTimeout(function () { 
+						console.log(map.getZoom());
+						if(map.getZoom()==0){
+							$.each(arrays,function(k,v){
+								v.show();
+							});
+						}else{
+							$.each(arrays,function(k,v){
+								v.hide();
+							});
+						}
+					}, 500);
+			    });
+			    //使用污染源的接口 拿40个点出来
+			    backService.get("/environmentCredit/pollutionall.json", function (data) {
+                    //定义标志，以及标志长宽      "images/point_icon.png", 30, 30
+                    var pictureSymbol = new PictureMarkerSymbol("images/gis/000000.gif", 50, 50);
+                   //更改方向
+                   //pictureSymbol.setAngle("45");
+                   //data.data.polluSourCtroList.length
+                     for (var i = 0; i < 40; i++) {
+                        //console.log(data.data.polluSourCtroList[i].risk);
+                        var newPoint = new Point(data.data.polluSourCtroList[i].x, data.data.polluSourCtroList[i].y, map.spatialReference);
+                        var graphic = new Graphic(newPoint, pictureSymbol);
+                        //给图形绑定上特定的值
+                        graphic.id = data.data.polluSourCtroList[i].id;
+                        //空气质量
+                        graphic.supervisiontype = data.data.polluSourCtroList[i].supervisiontype;
+                        //国控省控市控
+                        graphic.risk = data.data.polluSourCtroList[i].risk;
+                        //企业名称
+                        graphic.enterpriseName = data.data.polluSourCtroList[i].enterpriseName;
+                        //市
+                        graphic.cityName = data.data.polluSourCtroList[i].cityName;
+                        //区
+                        graphic.area = data.data.polluSourCtroList[i].area;
+                        graphic.show();
+                        //console.log("pointsArcCoordsLayer");
+                        //console.log(pointsArcCoordsLayer);
+                        arrays.push(graphic);
+                        pointsArcCoordsLayer.add(graphic);
+
+                    }
+                });
+                
+                /********风 end*******/
+			
+			//更新
+			function updateColor(){
+				//图层刷新 
+				pointsArcCoordsLayer.redraw();
+			}
+        		var tr=$(window.parent.document).find("#company tr");
+   				 var airType=$(window.parent.document).find("#airType").val();
+				console.log(tr);
+				var level=[];
+				var value=[];
+	    		$.each(tr,function(k,v){
+	    			value[k]=$(v).children("td").eq(1).text();
+	    			level[k]=$(v).children("td").eq(2).text();
+	    		});
+                data = [
+                		{"name":"高明孔堂","x":"112.824844","y":"22.873791","type":airType,"level":level[1],"value":value[1]},
+		                { "name": "华材职中", "x": "113.0191", "y": "22.98017" ,"type":airType,"level":level[2],"value":value[2]},
+		                { "name": "南海气象局", "x": "113.148177", "y": "23.040194" ,"type":airType,"level":level[3],"value":value[3]},
+		                { "name": "华容街道办", "x": "113.264858", "y": "22.768502" ,"type":airType,"level":level[4],"value":value[4]},
+		                { "name": "三水云东海", "x": "112.884595", "y": "23.21833" ,"type":airType,"level":level[5],"value":value[5]},
+		                { "name": "顺德苏岗", "x": "113.30658", "y": "22.813256" ,"type":airType,"level":level[6],"value":value[6]}];
+                    //定义标志，以及标志长宽
+                    triangle_green = new PictureMarkerSymbol("images/triangle_green.png", 20, 20);
+                    triangle_yellow = new PictureMarkerSymbol("images/triangle_yellow.png", 20, 20);
+                    triangle_red = new PictureMarkerSymbol("images/triangle_red.png", 20, 20);
+                    triangle_black = new PictureMarkerSymbol("images/triangle_black.png", 20, 20);
+                     //for (var i = 0; i < data.data.polluSourCtroList.length; i++) {
+                    for (var i = 0; i < data.length; i++) {
+                        //console.log(data.data.polluSourCtroList[i].risk);
+
+                        newPoint = new Point(data[i].x,data[i].y, map.spatialReference);
+                        if(data[i].level==airLevel[0]){
+                        	
+                        	graphic = new Graphic(newPoint,triangle_green);
+                        	graphic.data=data[i];
+                        }else if(data[i].level==airLevel[1]){
+                        	graphic = new Graphic(newPoint,triangle_yellow);
+                        	graphic.data=data[i];
+                        }else if(data[i].level==airLevel[2]){
+                        	graphic = new Graphic(newPoint,triangle_red);
+                        	graphic.data=data[i];
+                        }else{
+                        	graphic = new Graphic(newPoint,triangle_black);
+                        	graphic.data=data[i];
+                        }
+                       
+						airGraphics.push(graphic);
+                        graphic.show();
+                        pointsArcCoordsLayer.add(graphic);
+
+                    }
+					
+					/*弹出*/
+					// 给标志点监听点击事件，并且加上自定义弹出框,样式为黑色弹框
+                pointsArcCoordsLayer.on("click", function (e) {
+                   //showSewageFactoryInfo(e);
+                   //console.log(e.graphic.data);
+                   showSewageFactoryInfo(e)
+                   
+                });
+
+                //地图弹出框
+                function showSewageFactoryInfo(e) {
+                    console.log(e.graphic.data);
+                    var data=e.graphic.data;
+                    var detailInfo =
+                        '<div style="width: 80%;text-align: center;">' +
+                        '<table style="position: relative;left: 10%;">' +
+                        '<tr style="height: 10px;"></tr><tr>' +
+                        '<td style="width: 35%;background-color: #029ce1;color: #fff;padding: 2px 4px;" >' + '测点名称:' +data.name+ '</td>' +
+                       '</tr >' +'<tr style="height: 10px;"></tr>'+
+                        '<tr>' +
+                        '<td style="width: 35%;background-color: #029ce1;color: #fff;padding: 2px 4px;">' +'x:' +data.x+ '</td>' +
+
+                        '<tr>' +
+                        '<td style="width: 35%;background-color: #029ce1;color: #fff;padding: 2px 4px;">' + 'y:' +data.y+ '</td>' +
+                        '</tr>' +
+                        '</tr>' +'<tr style="height: 10px;"></tr>'+
+                        '<tr>' +
+                        '<td style="width: 35%;background-color: #029ce1;color: #fff;padding: 2px 4px;">' +data.type+':' +data.value+ '</td>' +
+                        '</tr>' +
+                        '</table >' +
+                        '</div>';
+                  
+                    popup.setTitle(data.name);
+                    popup.setContent(detailInfo);
+                    popup.show(e.mapPoint);
+                    //设置弹出框内编剧
+                    //contentPane
+                    console.log($(".contentPane"));
+                     $(".title").css({
+                    	"width":"220px", "whiteSpace":"nowrap", "overflow":"hidden","textOverflow":"ellipsis",
+                    });
+                    $(".actionsPane").css({ "display": "none" });
+                     $(".contentPane").css({
+                    	"backgroundColor": "#0a1227","padding":"0px","overflow":"hidden","height":"150px"
+                    	,"width": "300px"
+                    });
+                    $(".esriPopupWrapper").css({
+                    	"width": "300px"
+                    });
+                    $(".sizer .titleButton.maximize").addClass("hidden");
+					$(".titlePane").css({
+						"backgroundColor":" #0a1227","textAlign": "center","width": "294px"
+					});
+					$(".actionsPane").css({ "display": "none" });
+					$(".close").css({
+						"right":"-25px"
+					});
+					$(".outerPointer").css({
+					    "backgroundColor": "#0a1227",
+					    "z-index": "99",
+					    "boxShadow":" #050f1e 0px 0px",
+                   });
+                }
+                /*弹出*/
+					
+                    pointsArcCoordsLayer.show();
+                    layer.close(index);
+            }
+        );
+
+      
+    </script>
+
+
+</head>
+
+<body>
+	<!-- 放大缩小 按钮-->
+	<script>
+	
+		$(function(){
+			var flag=$(window.parent.document).find("#flag").val();
+			if(flag==2){
+				$(".big_logo").css({display: "inline-block"});
+				$(".small_logo").css({display: "none"});
+			}else{
+				$(".small_logo").css({display: "inline-block"});
+				$(".big_logo").css({display: "none"});
+			}
+			$(".big_logo").click(function(){
+			
+				parent.tanChu(1);
+				$(".small_logo").css({display: "inline-block"});
+				$(".big_logo").css({display: "none"});
+				setTimeout(function(){
+					map.centerAndZoom([113, 23]);
+				},500);
+			});
+			$(".small_logo").click(function(){
+				
+				parent.tanChu(2);
+				$(".big_logo").css({display: "inline-block"});
+				$(".small_logo").css({display: "none"});
+				setTimeout(function(){
+					map.centerAndZoom([113, 23]);
+				},500);
+			});
+		});
+	</script>
+	<!--<img id="bg" src="images/move.gif"/>-->
+	<div class="big_small_logo">
+		<span title="点击放大" class="big_logo"><img src="images/change_max_hover.png" width="100%" height="100%"/></span>
+		<span title="点击缩小" class="small_logo"><img src="images/change_min.png" width="100%" height="100%"/></span>
+	</div>
+				
+			<!---->
+    <div id="map-area"></div>
+</body>

@@ -1,0 +1,52 @@
+apply plugin: 'java'
+apply plugin: 'war'
+apply plugin: 'kotlin'
+
+buildscript {
+    ext.kotlin_version = '1.2.41'
+
+    repositories {
+        mavenCentral()
+    }
+
+    dependencies {
+        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
+    }
+}
+
+repositories {
+	mavenCentral()
+	maven {
+		url "https://repository.apache.org/content/repositories/snapshots/"
+	}
+}
+
+tasks.withType(JavaCompile) {
+	options.encoding = 'UTF-8'
+}
+
+sourceSets.main.java.srcDirs = [
+	'../pub/src/main/java',
+	'../pub/src/main/kotlin',
+	'../shared-model/src/main/java',
+	'../shared-dao/src/main/java',
+	'../shared-utils/src/main/java',
+	'src/main/java'
+]
+
+sourceSets.main.resources.srcDirs = [
+	'../pub/src/main/resources',
+	'../shared-model/src/main/resources',
+	'../shared-dao/src/main/resources',
+	'../shared-utils/src/main/resources',
+	'src/main/resources'
+]
+
+task warExploded(type: Sync) {
+    into "$buildDir/warExploded"
+    with war
+}
+
+dependencies {
+	compile project(':.dep')
+}

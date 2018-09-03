@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html>
+<head lang="en">
+	<meta charset="UTF-8">
+	<title></title>
+	<link href="css/app.css" rel="stylesheet"/>
+	<link href="css/layout/global.css" rel="stylesheet"/>
+	<link href="css/index/indexSub.css" rel="stylesheet"/>
+	<link href="css/index/emergency.css" rel="stylesheet"/>
+	<link href="css/layout/pagination.css" rel="stylesheet"/>
+	<script type="text/javascript" src="js/app.js"></script>
+	<script type="text/javascript" src="js/session.js"></script>
+	<script type="text/javascript" src="layui/layui.js"></script>
+	<script type="text/javascript" src="js/lib/jquery-3.3.1.min.js"></script>
+	<script type="text/javascript" src="js/pub/app.js"></script>
+	<script type="text/javascript" src="js/pub/pub.js"></script>
+	<script type="text/javascript" src="js/common/common.js"></script>
+	<script type="text/javascript" src="js/backservice.js"></script>
+	<script type="text/javascript" src="js/pagination.js"></script>
+</head>
+<style>
+</style>
+<body>
+<div class="nav-pane">
+	<div class="query-pane">
+		<form>
+		<div class="field">
+			<label>企业名称</label>
+		    <input type="text" id="companyName">
+		</div>
+		<div class="selBox">
+			<label>企业类型:</label>
+			<select id="type">
+				<option value="">--请选择--</option>
+				<option value="1">废水</option>
+				<option value="2">废气</option>
+				<option value="3">污水</option>
+				<option value="4">重金属</option>
+				<option value="5">危险废物</option>
+			</select>
+		</div>
+		<div class="selBox">
+			<label>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;地区:</label>
+			<select id="area">
+				<option value="">--请选择--</option>
+				<option value="三水区">三水区</option>
+				<option value="高明区">高明区</option>
+				<option value="顺德区">顺德区</option>
+				<option value="南海区">南海区</option>
+				<option value="禅城区">禅城区</option>
+			</select>
+		</div>
+		<div class="op">
+			<button id="submit">查询</button>
+		</div>
+		</form>
+	</div>
+	<div class="grid">
+		<table>
+			<thead>
+			<tr>
+				<th>序号</th>
+				<th>企业名称</th>
+			</tr>
+			</thead>
+			<tbody id="company">
+
+			</tbody>
+		</table>
+	</div>
+	<div class="pagination"></div>
+	<script>
+		$(document).ready(function () {
+			backService.get("http://172.16.88.49:8080/app-server/environmentCredit/pollutionlike.json", {
+				pollutionName:"",
+				pageNum:1
+			}, function (res) {
+				var dbDate=res;
+				/**分页**/
+				$(".pagination").createPage({
+					pageCount:dbDate.data.hashMap.count,
+					current:1,
+					backFn:function(p){
+						getTabData("",p,"","");
+					}
+				});
+			}, function () {
+			});
+		});
+	</script>
+</div>
+<div class="splitter"><div class="handler"></div></div>
+<div class="workarea">
+	<form>
+		<input type="hidden" id="first" value="true" />
+		<input type="hidden" id="x" value="112.90467719326922" />
+		<input type="hidden" id="y" value="23.294580845554856" />
+		<input type="hidden" id="id" value="1" />
+		<input type="hidden" id="enterpriseName" value="青岛啤酒（三水）有限公司" />
+	</form>
+	<div id="hintInfoFrame">
+			<p> &nbsp;注:地图为企业风险源统计</p >
+			<table>
+				<tr>
+					<td>
+					<img src="images/1.png" />
+					</td>
+					<td> 一般风险</td>
+					<td>
+					<img src="images/2.png" />
+					</td>
+					<td> 较大风险</td>
+				</tr>
+				<tr>
+					<td>
+					<img src="images/3.png" />
+					</td>
+					<td> 重大风险</td>
+					<td></td>
+					<td></td>
+				</tr>
+			</table>
+		</div>
+	<iframe id="mapIframe" src="gisMapByRisk.html" width="100%" height="100%"></iframe>
+
+</div>
+</body>
+<script>
+	var count=0;
+	$(document).ready(function () {
+		$("#companyName").blur(function(){
+			var value=$(this).val();
+			getPageTotal(value,1,"","");
+		});
+		$("#submit").click(function(){
+			$(".pagination").empty();
+			var val=$("#companyName").val();
+			var type=$("#type").val();
+			var area=$("#area").val();
+			getTabData(val,1,type,area);
+			$(".pagination").createPage({
+				pageCount:getPageTotal(val,1,type,area),
+				current:1,
+				backFn:function(p){
+					getTabData(val,p);
+				}
+			});
+			return false;
+		});
+		getTabData("",1,"","");
+		$(".grid").on("click","tr td",function(){
+			var id=$(this).attr("data-id");
+			var x=$(this).attr("data-x");
+			var y=$(this).attr("data-y");
+			var enterpriseName=$(this).text();
+			$("#x").val(x);
+			$("#y").val(y);
+			$("#enterpriseName").val(enterpriseName);
+			$("#id").val(id);
+			$("#first").val("");
+			$("#hintInfoFrame").css({"display":"none"});
+			document.getElementById('mapIframe').src="gisMapById.html";
+		});
+	});
+	//获取企业列表数据
+	function getTabData(name,pageNo,type,area){
+		backService.get("/environmentCredit/pollutionlike.json", {
+			pollutionName:name,
+			pageNum:pageNo,
+			type:type,
+			area:area
+		}, function (res) {
+			var dbDate=res;
+			var list=dbDate.data.hashMap.polluSourCtros;
+			var html="";
+			console.log(list);
+			for(var i=0;i<list.length;i++){
+				html+="<tr><td>"+(i+1)+"</td>";
+				var enterpriseName=list[i].enterpriseName;
+				var title="";
+				if(enterpriseName.length>17){
+					enterpriseName=enterpriseName.substring(0,17)+"...";
+					title=list[i].enterpriseName;
+				}
+				html+="<td class='getMap' title='"+title+"' data-id='"+list[i].id+"' data-x='"+list[i].x+"' data-y='"+list[i].y+"' >"+
+						enterpriseName+"</td>";
+				html+="</tr>";
+			}
+			$("#company").html(html);
+		}, function () {
+
+		});
+	}
+	function getPageTotal(name,pageNo){
+		backService.get("/environmentCredit/pollutionlike.json", {
+			pollutionName:name,
+			pageNum:pageNo
+		}, function (res) {
+			console.log("res:"+res);
+			var dbDate=res;
+			//console.log("num:"+dbDate.data.hashMap.count);
+			count=dbDate.data.hashMap.count
+		}, function () {
+			count=0;
+		});
+		return count;
+	}
+</script>
+</html>

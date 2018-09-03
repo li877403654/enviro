@@ -1,0 +1,967 @@
+<!DOCTYPE html>
+<html>
+
+<head lang="en">
+	<meta charset="UTF-8">
+	<title></title>
+	<link href="css/layout/global.css" rel="stylesheet" />
+	<link href="css/index/indexSub.css" rel="stylesheet" />
+	<link href="css/index/airQuality.css" rel="stylesheet" />
+	<script type="text/javascript" src="js/app.js"></script>
+	<script type="text/javascript" src="js/session.js"></script>
+	<script type="text/javascript" src="js/lib/jquery-3.3.1.min.js"></script>
+	<script type="text/javascript" src="js/common/common.js"></script>
+	<script type="text/javascript" src="js/backservice.js"></script>
+	<script type="text/javascript" src="js/index/echarts.js"></script>
+	<script type="text/javascript" src="js/index/echarts-wordcloud.js"></script>
+	<script type="text/javascript" src="js/index.js"></script>
+	<script type="text/javascript" src="js/public.js"></script>
+	
+	 	<!--前后端分离-->
+	<script src="js/session.js"></script>
+	<script src="js/backservice.js"></script>
+	<script src="js/app.js"></script>
+	<style>
+		.dijitSliderRemainingBar {
+			background-color: #fff;
+		}
+
+		.dijitSliderBar {
+			border-color: #fff;
+		}
+	</style>
+
+</head>
+<body>
+	<input type="hidden" name="flag" id="flag" value="2" />
+	<input type="hidden" name="airType" id="airType" value="SO2" />
+	<div class="workarea">
+		<div  class="group-btn">
+			<div class="btns">
+				<p class="active">SO₂</p>
+				<p>NO₂</p>
+				<p>O₃</p>
+				<p>PM10</p>
+				<p>PM2.5</p>
+				<p>AQI</p>
+				<p>CO</p>
+			</div>
+		</div>
+	     <!--左边的内容版块-->
+		<div class="viewarea">
+			<!--空气动态-->
+			<div class="view-panel lb airDyn">
+				<p class="label">空气动态</p>
+				<h6 class="remind" id="kqdyn"></h6>
+				<div style="flex: 1;">
+					<div class="basic-info">
+						<p class="basic-one">AQI:
+							<span id="AQI">123</span>
+						</p>
+						<p class="basic-two">等级:
+							<span id="dj">123</span>
+						</p>
+					</div>
+				</div>
+				<div class="detail-info">
+					<div class="de-info-num">
+						<p class="number num-bg-one" id="SO2">23</p>
+						<p class="number num-bg-two" id="NO2">23</p>
+						<p class="number num-bg-three" id="O3">23</p>
+						<p class="number num-bg-four" id="CO">23</p>
+						<p class="number num-bg-five" id="PM10">23</p>
+						<p class="number num-bg-six" id="PM">23</p>
+					</div>
+					<div class="de-info-txt">
+						<p class="txt txt-one">SO₂</p>
+						<p class="txt txt-two">NO₂</p>
+						<p class="txt txt-three">O₃</p>
+						<p class="txt txt-four">CO</p>
+						<p class="txt txt-five">PM10</p>
+						<p class="txt txt-six">PM2.5</p>
+					</div>
+				</div>
+			</div>
+			<!--天气播报-->
+			<div class="view-panel rb airBroadcast">
+				<p class="label">天气播报</p>
+				<h6 class="remind" id="tqbb"></h6>
+				<div class="temp-panel" id="waterSupply">
+					<div class="temp-basic">
+						<div class="basic-info">
+							<p class="basic-three">风向:
+								<span id="fx">123</span>
+							</p>
+							<p class="basic-four">风力:
+								<span id="fl">123</span>
+							</p>
+						</div>
+					</div>
+					<div class="temp-detail">
+						<div class="temp-de-item">
+							<p class="temp-img-one">
+								<img src="images/bz-2.png" />
+							</p>
+							<p class="temp-txt wd">温度
+								<br/>
+								<span id="wd">38℃</span>
+							</p>
+						</div>
+						<div class="temp-de-item">
+							<p class="temp-img-two">
+								<img src="images/bz-1.png" />
+							</p>
+							<p class="temp-txt sd">湿度
+								<br/>
+								<span id="sd">34RH</span>
+							</p>
+						</div>
+					</div>
+					<div style="flex: 3;" id="weather">
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<!--地图版块-->
+		<div class="maparea">
+			<div class="map-maparea">
+				<table>
+					<tr>
+						<td rowspan="6">
+							<div class="map-maparea-colorcolumn"></div>
+						</td>
+					</tr>
+					<tr>
+						<td>严重</td>
+					</tr>
+					<tr>
+						<td>
+							<br>
+						</td>
+					</tr>
+					<tr>
+						<td>中等</td>
+					</tr>
+					<tr>
+						<td>
+							<br>
+						</td>
+					</tr>
+					<tr>
+						<td>良好</td>
+					</tr>
+				</table>
+			</div>
+			<div class="map-sub"></div>
+			<div class="map-panel">
+				<iframe src="gisMapAirQuality.html" id="mapAirQuality" name="mapAirQuality" width="100%" height="100%"></iframe>
+			</div>
+		</div>
+
+		<!--右边的内容版块-->
+		<div class="viewarea" >
+			<!--空气质量变化趋势-->
+			<div class="view-panel b airChange">
+				<p class="label">PM2.5变化趋势</p>
+				<div class="grade-panel"  id="airQualityChange">
+					<div class="grade-sub"  id="container"></div>
+					<!--div class="air_quality_maparea">PM2.5</div-->
+					<div class="grade-collection">
+						<div class="grade-box">
+							<p class="date">8/20</p>
+							<p class="grade one">无</p>
+						</div>
+						<div class="grade-box">
+							<p class="date">8/21</p>
+							<p class="grade two">无</p>
+						</div>
+						<div class="grade-box">
+							<p class="date">8/22</p>
+							<p class="grade three">无</p>
+						</div>
+						<div class="grade-box">
+							<p class="date">8/23</p>
+							<p class="grade four">无</p>
+						</div>
+						<div class="grade-box">
+							<p class="date">8/24</p>
+							<p class="grade four">无</p>
+						</div>
+						<div class="grade-box">
+							<p class="date">8/25</p>
+							<p class="grade four">无</p>
+						</div>
+						<div class="grade-box">
+							<p class="date">8/26</p>
+							<p class="grade four">无</p>
+						</div>
+					</div>
+				</div>
+			</div>
+			<!--佛山市各地区AQI对比-->
+			<div class="view-panel b contrast">
+				<p class="label">佛山市各地区AQI对比</p>
+				<div class="contrastEchart"  id="region-Chart">
+				</div>
+			</div>
+		</div>
+		<div class="dataList">
+			<h5 class="title" id="grid-table-th">佛山市 SO2 2018-08-29 13时</h5>
+			<div class="grid">
+				<table>
+					<thead>
+					<!--tr>
+						<td id="grid-table-th" colspan="3">时间 加 类别</td>
+					</tr-->
+					</thead>
+					<tbody id="company">
+						<tr>
+							<td>测点名称</td>
+							<td>测点值</td>
+							<td>等级</td>
+						</tr>
+						<tr>
+							<td>序号</td>
+							<td>企业名称</td>
+							<td>企业</td>
+						</tr>
+						<tr>
+							<td>序号</td>
+							<td>企业名称</td>
+							<td>企业</td>
+						</tr>
+						<tr>
+							<td>序号</td>
+							<td>企业名称</td>
+							<td>企业</td>
+						</tr>
+						<tr>
+							<td>序号</td>
+							<td>企业名称</td>
+							<td>企业</td>
+						</tr>
+						<tr>
+							<td>序号</td>
+							<td>企业名称</td>
+							<td>企业</td>
+						</tr>
+						<tr>
+							<td>序号</td>
+							<td>企业名称</td>
+							<td>企业</td>
+						</tr>
+					</tbody>
+				</table>
+			</div>
+            <p class="notes">注：每小时PM10,PM2.5的空气质量分级浓度限值参考24小时浓度的空气质量分级浓度限值</p>
+		    <div class="legend-panel">
+				<p class="legend-title">最新1小时SO₂平均值图例（微克、立方米）</p>
+				<div class="legend-sub">
+					<div class="legend-item">
+						<p class="one"></p>
+						<p class="two"></p>
+						<p class="three"></p>
+						<p class="four"></p>
+					</div>
+					<div class="legend-item">
+						<p>0</p>
+						<p>50</p>
+						<p>100</p>
+						<p>150</p>
+					</div>
+				</div>
+		    </div>
+		</div>
+	</div>
+</body>
+<script>
+	/****/
+	function getWeatherBroadcast() {
+		backService.get('/environmentCredit/weatherq.json', {
+		}, function (res) {
+			var dbDate = res;
+			var list = dbDate.data.linkedCaseInsensitiveMapList;
+			$("#fx").html(list[0].direction);
+			$("#fl").html(list[0].speed);
+			$("#wd").html(list[0].temp);
+			if (list[0].humidity == null) {
+				$("#sd").html("32");
+			} else {
+				$("#sd").html(list[0].humidity);
+			}
+		}, function () {
+
+		});
+	}
+	$(document).ready(function () {
+		$("#kqdyn").html(initLabelDate());
+		$("#tqbb").html(initLabelDate());
+		getWeatherBroadcast();
+		//regionAirQualityChange();
+		getAirQuality();
+		regionChart();
+		readtqbbEchart();
+		/**空气质量变化趋势数据加载**/
+		lodeAirQualityChange(); //加载
+		getAirByType("SO2",1);// 空气页面 地图放大 列表加载
+
+		/**空气页面  按钮切换**/
+		$(".btns p").click(function(){
+			var liIndex=$(this).index();
+			$(this).addClass('active').siblings().removeClass('active');
+			var type=$(this).index()+1;
+			
+			var text =$(this).text();
+			$("#airType").val(text);
+			getAirByType(text,type);
+		});
+	});
+	
+	/* 地图放大 相关代码  begin */
+//	$(".group-btn button").click(function(){
+//
+//	});
+	function getAirByType(text,type){
+		backService.get("/environmentCredit/get_air_by_type.json",{type:type},function (data) {
+			
+			var tr="<tr><td>测点名称</td><td>测点值</td><td>等级</td></tr>";
+			var td_begin="<td>";
+			var ta_end="</td>";
+			var td_level="<td class='air-level'>";
+			var air_data=data.data.airQualityList;
+			$("#grid-table-th").text("佛山市 "+text+" "+air_data[0].cont);
+			var address = ["高明孔堂","华材职中","南海气象局","华容街道办","三水云东海" ,"顺德苏岗"];
+			$.each(air_data,function(k,v){
+				var monitoringPoint = address[k];
+				if(monitoringPoint){
+					tr+="<tr>";
+					//测点名称
+					tr+=td_begin+monitoringPoint+ta_end;
+					//测点值
+					tr+=td_begin+v.target+ta_end;
+					
+					var level=v.level;
+					if(!level){
+						level="无";
+					}
+					//等级
+					
+					tr+=td_level+level+ta_end;
+					tr+="</tr>";
+				}
+			});
+			$("#company").empty();
+			$("#company").append(tr);
+			mapAirQuality.window.showAirPoint();
+			//document.getElementById('mapAirQuality').src=document.getElementById('mapAirQuality').src;
+		});
+	}
+	/* 空气页面 地图放大 相关代码  end */
+	function tanChu(val){
+		$("#flag").val(val);
+		if(val==1){
+			$(".group-btn").css("display","block");
+			$(".dataList").css("display","block");
+			$(window.parent.document).find(".map-nav").css("display","none");
+			$(".map-sub").css("display","none");
+			$(".viewarea").css("display","none");
+
+		}else {
+			$(".group-btn").css("display","none");
+			$(".dataList").css("display","none");
+
+			$(window.parent.document).find(".map-nav").css("display","block");
+			$(".map-sub").css("display","");
+
+			$(".viewarea").css("display","");
+		}
+	}
+	
+	
+	/**天气播报**/
+	function readtqbbEchart() {
+		//一天中每个小时的天气，数据为2018-08-24各个小时温度
+		var arrayTime = {
+			0: 24, 1: 25, 2: 22, 3: 22, 4: 23, 5: 26, 6: 28, 7: 29, 8: 29, 9: 30
+			, 10: 31, 11: 32, 12: 31, 13: 32, 14: 33, 15: 32, 16: 32, 17: 32, 18: 30, 19: 31
+			, 20: 30, 21: 29, 22: 26, 23: 24
+		};
+		backService.get("/environmentCredit/weathertime.json", function (data) {
+			//console.log(data.data.hashMap.hours);
+			var option = {
+				title: {
+					text: ''
+				},
+				tooltip: {
+					trigger: 'axis',
+					//鼠标触发时展示值后面添加%
+					formatter: "{a} <br/>{b} : {c}°C"
+				},
+				axisLabel: {
+					color: "#ff0" //刻度线标签颜色
+				},
+				//			legend: {
+				////				data:['温度'],
+				////				textStyle: {
+				////					color: '#02A2E9'          //legend字体颜色
+				////				},
+				//			},
+				grid: {
+					top: '26px',
+					left: '3%',
+					right: '5%',
+					bottom: '3%',
+					containLabel: true
+				},
+				axisLabel: {
+					color: "#ff0" //刻度线标签颜色
+				},
+				yAxis: [
+					{	name:'℃',
+						type: 'value',
+						axisLabel: { //调整y轴的lable
+							textStyle: {
+								fontSize: 12 // 让字体变大
+							}
+						},
+						"nameTextStyle": {
+							"color": "#EDED04"
+						}
+					}
+				],
+				xAxis: {
+					type: 'category',
+					boundaryGap: false,
+					data: (function () {
+						//console.log("Baba ");
+						var res = [];
+						for (var i = 0; i < data.data.hashMap.hours.length; i++) {
+							//console.log(data.data.hashMap.hours[i]);
+							if (i == 0) {
+								res.push('现在');
+							} else {
+								res.push(data.data.hashMap.hours[i] + '时');
+
+							}
+						}
+						return res;
+					})(),
+					axisLabel: { //调整x轴的lable
+						textStyle: {
+							fontSize: 10 // 让字体变大
+						}
+					}
+				},
+
+				series: [
+					{
+						name: '温度',
+						type: 'line',
+						stack: '摄氏度',
+						data: (function () {
+							//console.log("Baba ");
+							var res = [];
+							for (var i = 0; i < data.data.hashMap.hours.length; i++) {
+								//console.log(data.data.hashMap.hours[i]);
+								res.push(arrayTime[data.data.hashMap.hours[i]]);
+							}
+							return res;
+						})()
+					}
+				]
+			};
+			//初始化echarts实例
+			var myChart = echarts.init(document.getElementById('weather'));
+			//使用制定的配置项和数据显示图表
+			myChart.setOption(option);
+		})
+	}
+
+	/**佛山市各地区AQI对比echart图**/
+	function regionChart() {
+		var dates = ['8/11', '8/15', '8/16', '8/17', '8/18', '8/19', '8/20'];
+		var a = [[80, 132, 201, 234, 290, 220,110],
+		[220, 182, 191, 234, 290, 330, 310],
+		[150, 232, 201, 154, 190, 330, 410],
+		[320, 332, 301, 334, 390, 330, 320],
+		[120, 232, 101, 334, 190, 330, 420]];
+		backService.get("/environmentCredit/airfindaql.json",
+			function (data) {
+				//console.log(data.data.treeMap.times);
+				var values = "";
+				var i = 0;
+				$.each(data.data.treeMap, function (k, v) {
+					dates[i] = k;
+					i++;
+					for (var j = 0; i < 5 && j < 7; j++) {
+						/*a[i][j]=v[j].point;*/
+						if (v[j]) {
+							a[i][j] = v[j].point;
+						} else {
+							var val = Math.floor(Math.random() + 200);
+							a[i][j] = val;
+						}
+					}
+				});
+				//渲染Echart
+				var option = {
+					tooltip: {
+						trigger: 'axis'
+					},
+					axisLabel: {
+						color: "#ff0" //刻度线标签颜色
+					},
+					legend: {
+						data: ['三水区', '高明区', '南海区', '禅城区', '顺德区'],
+						textStyle: {
+							color: '#02A2E9'          //legend字体颜色
+						}
+					},
+					grid: {
+						left: '3%',
+						right: '8%',
+						bottom: '3%',
+						containLabel: true
+					},
+					/*toolbox: {
+					 feature: {
+					 saveAsImage: {}
+					 }
+					 },*/
+					xAxis: {
+						type: 'category',
+						boundaryGap: false,
+						//日期
+						data: [dates[0], dates[1], dates[2], dates[3], dates[4], dates[5], dates[6]],/*动态数据*/
+						axisLine: {
+							lineStyle: {
+								width: 3   //这里是坐标轴的宽度,可以去掉
+							}
+						}
+					},
+					yAxis: {
+						type: 'value'
+					},
+					series: [
+						{
+							name: '三水区',
+							type: 'line',
+							stack: 'AQI',
+							//数值
+							data: [a[0][0], a[0][1], a[0][2], a[0][3], a[0][4], a[0][5], a[0][6]]
+						},
+						{
+							name: '高明区',
+							type: 'line',
+							stack: 'AQI',
+							data: [a[1][0], a[1][1], a[1][2], a[1][3], a[1][4], a[1][5], a[1][6]]
+						},
+						{
+							name: '南海区',
+							type: 'line',
+							stack: 'AQI',
+							data: [a[2][0], a[2][1], a[2][2], a[2][3], a[2][4], a[2][5], a[2][6]]
+						},
+						{
+							name: '禅城区',
+							type: 'line',
+							stack: 'AQI',
+							data: [a[3][0], a[3][1], a[3][2], a[3][3], a[3][4], a[3][5], a[3][6]]
+						},
+						{
+							name: '顺德区',
+							type: 'line',
+							stack: 'AQI',
+							data: [a[4][0], a[4][1], a[4][2], a[4][3], a[4][4], a[4][5], a[4][6]]
+						}
+					]
+				};
+				//初始化echarts实例
+				var myChart = echarts.init(document.getElementById('region-Chart'));
+				//使用制定的配置项和数据显示图表
+				myChart.setOption(option);
+			});
+
+	}
+
+	function regionAirQualityChange() {
+		var dom = document.getElementById("airQualityChange");
+		var myChart = echarts.init(dom);
+		var app = {};
+		option = null;
+
+		backService.get("/environmentCredit/airhot.json", {
+		}, function (res) {
+			var hashMap = res.data.treeMap;
+			var data = [];
+			$.each(hashMap, function (k, v) {
+				$.each(v, function (tk, tv) {
+					data.push([k, tv.target]);
+				});
+			});
+			myChart.setOption(option = {
+				title: {
+					text: ''
+				},
+				tooltip: {
+					trigger: 'axis'
+				},
+				xAxis: {
+					data: data.map(function (item) {
+						return item[0];
+					})
+				},
+				yAxis: {
+					splitLine: {
+						show: false
+					}
+				},
+				dataZoom: [{
+					startValue: '2014-06-01'
+				}, {
+					type: 'inside'
+				}],
+				visualMap: {
+					show: false,
+					top: 10,
+					right: 10,
+					pieces: [{
+						gt: 0,
+						lte: 15,
+						color: '#096'
+					}, {
+						gt: 15,
+						lte: 30,
+						color: '#ffde33'
+					}, {
+						gt: 30,
+						lte: 45,
+						color: '#ff9933'
+					}, {
+						gt: 45,
+						lte: 60,
+						color: '#cc0033'
+					}, {
+						gt: 60,
+						lte: 75,
+						color: '#660099'
+					}, {
+						gt: 90,
+						color: '#7e0023'
+					}],
+					outOfRange: {
+						color: '#999'
+					}
+				},
+				series: {
+					name: '空气质量',
+					type: 'line',
+					data: data.map(function (item) {
+						return item[1];
+					}),
+					markLine: {
+						silent: true,
+						data: [{
+							yAxis: 15
+						}, {
+							yAxis: 30
+						}, {
+							yAxis: 45
+						}, {
+							yAxis: 60
+						}, {
+							yAxis: 75
+						}]
+					}
+				}, axisLabel: {
+					/*textStyle:{
+					 color:'red'
+					 }*/
+					color: 'white'/*我试了一下，两种写法都是ok的*/
+				}
+			});
+		}, function () {
+
+		});
+		if (option && typeof option === "object") {
+			myChart.setOption(option, true);
+		}
+	}
+
+	/**空气质量**/
+	function getAirQuality() {
+		backService.get('/environmentCredit/airfromtype.json', {
+		}, function (res) {
+			var dbDate = res;
+			var list = dbDate.data.linkedCaseInsensitiveMapList;
+			var total = 0;
+			for (var i = 0; i < list.length; i++) {
+				if (list[i].type_air == "1") {
+					total += Math.round(list[i].target);
+					$("#SO2").html(Math.round(list[i].target));
+				} else if (list[i].type_air == "2") {
+					total += Math.round(list[i].target);
+					$("#NO2").html(Math.round(list[i].target));
+				} else if (list[i].type_air == "3") {
+					total += Math.round(list[i].target);
+					$("#O3").html(Math.round(list[i].target));
+				} else if (list[i].type_air == "4") {
+					total += Math.round(list[i].target);
+					$("#PM10").html(Math.round(list[i].target));
+				} else if (list[i].type_air == "5") {
+					total += Math.round(list[i].target);
+					$("#PM").html(Math.round(list[i].target));
+				} else if (list[i].type_air == "6") {
+					total += Math.round(list[i].target);
+					$("#AQI").html(Math.round(list[i].target));
+				} else if (list[i].type_air == "7") {
+					total += Math.round(list[i].target);
+					$("#CO").html(Math.round(list[i].target));
+				}
+
+			}
+			if (total < 50) {
+				$("#dj").html("优");
+			} else if (100 < total < 50) {
+				$("#dj").html("良好");
+			} else {
+				$("#dj").html("轻度污染");
+			}
+		}, function () {
+
+		});
+	}
+
+
+	/* 加载空气质量变化趋势模块数据 */
+	function lodeAirQualityChange() {
+		var airQualityData = {};
+		backService.get("/environmentCredit/get_air_p_m.json",function(data){
+			var i = 0;
+			$.each(data.data.treeMap,function(k,v){
+				v = Math.floor(v[0].target * 100) / 100
+				var state = v <= 50 ? '优' : v <= 100 ? '良' : v <= 150 ? '轻度污染' : '重度污染';
+				var statecolor = v <= 50 ? '#7cf57c' : v <= 100 ? 'yellow' : v <= 150 ? 'red' : 'red';
+				$(".grade-collection .grade-box:eq(" + i + ") p:eq(0)").text(k);
+				//$(".grade-collection .grade-box:eq(" + i + ") p:eq(1)").text(state).css({"background-color": statecolor,"border":"1px solid "+ statecolor}).attr("onclick", "getAirQualityChangeInfo(" + v +");");
+				$(".grade-collection .grade-box:eq(" + i + ") p:eq(1)").text(state).css({"background-color": statecolor}).attr("onclick", "getAirQualityChangeInfo(" + v +");");
+				airQualityData[k] = v;
+				if(i==0){
+					getAirQualityChangeInfo(v);
+				}
+				i++;
+			});
+	 	})
+	}
+
+	/*加载空气质量变化趋势Echarts图*/
+	function getAirQualityChangeInfo(num) {
+		//////////////////////
+		// 	/* 空气质量变化趋势 */
+		var dom = document.getElementById("container");
+		var myChart = echarts.init(dom);
+		var app = {};
+		option = null;
+		option = {
+			//backgroundColor: "#ffffff",
+			color: ["#37A2DA", "#32C5E9", "#67E0E3"],
+			series: [{
+				min: 0,
+				max: 150,
+				splitNumber: 6, //刻度数量
+				name: '业务指标',
+				type: 'gauge',
+				detail: {
+					formatter: '{value}',
+					offsetCenter: [0, '70%']
+				}, radius: '100%',            //偏移
+				axisLine: {
+					show: true,
+					lineStyle: {
+						width: 15,
+						shadowBlur: 10,
+						color: [
+							[0.33333, '#7cf57c'],
+							[0.66666, 'yellow'],
+							[1, 'red']
+						]
+					}
+				},
+				data: [{
+					value: num,
+					name: ' '
+				}]
+
+			}]
+		};
+
+		function reload(resouce) {
+			option.series[0].data[0].value = resouce;
+			myChart.setOption(option, true);
+		}
+		if (option && typeof option === "object") {
+			myChart.setOption(option, true);
+		}
+
+	}
+
+	// function getAirQualityChangeInfo() {
+	// 	var airQualityDiv = $(".grade-collection .grade-box:eq(3) p:eq(1)");
+	// 	var airQualityData = []; //空气质量检测总数据
+	// 	$.get("http://172.16.104.151:8080/app-server/environmentCredit/get_air_p_m.json",function(data){
+	// 		airQualityData = data.treeMap;
+	// 	})
+
+
+	// 	//<p>8/20</p>
+	// 	//<p class="grade one">重度</p>
+
+	// 	/* 空气质量变化趋势 */
+	// 	var dom = document.getElementById("container");
+	// 	var myChart = echarts.init(dom);
+	// 	var app = {};
+	// 	option = null;
+	// 	option = {
+	// 		// backgroundColor: "#062a44",
+	// 		series: [{
+	// 			name: '刻度',
+	// 			type: 'gauge',
+	// 			radius: '90%',
+	// 			min: 0,
+	// 			max: 200,
+	// 			splitNumber: 10, //刻度数量
+	// 			startAngle: 220, //刻度盘从左到右的长度
+	// 			endAngle: -40,   //列表盘从用右到左的长度
+	// 			axisLine: {
+	// 				show: true,
+	// 				lineStyle: {
+	// 					width: 1,
+	// 					color: [
+	// 						[1, 'rgba(0,0,0,0)']
+	// 					]
+	// 				}
+	// 			}, //仪表盘轴线
+	// 			axisLabel: {
+	// 				show: true,
+	// 				color: '#fff',
+	// 				distance: 20      //外圈数字离中心点的距离
+	// 			}, //刻度标签。
+	// 			axisTick: {
+	// 				show: true,
+	// 				lineStyle: {
+	// 					color: '#fff',
+	// 					width: 1     //外圈白色虚线宽度
+	// 				},
+	// 				length: -8
+	// 			}, //刻度样式
+	// 			splitLine: {
+	// 				show: true,
+	// 				length: -20,
+	// 				lineStyle: {
+	// 					color: '#fff'
+	// 				}
+	// 			}, //分隔线样式
+	// 			detail: {
+	// 				show: false
+	// 			},
+	// 			pointer: {
+	// 				show: false
+	// 			}
+	// 		},
+	// 		{
+
+
+	// 			type: 'gauge',
+	// 			radius: '70%',            //偏移
+	// 			center: ['50%', '50%'],  //偏移
+
+	// 			splitNumber: 0,         //刻度数量
+	// 			startAngle: 220,        //刻度从右到左长度
+	// 			endAngle: -40,
+	// 			axisLine: {
+	// 				show: true,
+	// 				lineStyle: {
+	// 					width: 10,      //刻度宽度
+	// 					color: [
+	// 						 [
+	// 							1, new echarts.graphic.LinearGradient(
+	// 								0, 0, 1, 0, [{
+	// 									offset: 0,
+	// 									color: 'green'
+	// 								},
+	// 								{
+	// 									offset: 0.5,
+	// 									color: 'yellow'
+	// 								},
+	// 								{
+	// 									offset: 1,
+	// 									color: 'red'
+	// 								}
+	// 								]
+	// 							)
+	// 						],
+	// 						[
+	// 							1, '#222e7d'
+	// 						]
+	// 					]
+	// 				}
+	// 			},
+	// 			//分隔线样式。
+	// 			splitLine: {
+	// 				show: false,
+	// 			},
+	// 			axisLabel: {
+	// 				show: false
+	// 			},
+	// 			axisTick: {
+	// 				show: false
+	// 			},
+	// 			pointer: {
+	// 				show: false  //指针
+	// 			},
+	// 			title: {
+	// 				show: true,
+	// 				offsetCenter: [0, '-50%'], // x, y，单位px
+	// 				textStyle: {
+	// 					color: '#ddd',          //中间字体颜色
+	// 					fontSize: 15            //中间字体大小
+	// 				}
+	// 			},
+	// 			//仪表盘详情，用于显示数据。
+	// 			detail: {
+	// 				show: true,
+	// 				offsetCenter: [0, 0],      //中间副标题字体偏移
+	// 				color: '#ddd',
+	// 				formatter: function (params) {
+	// 					return params
+	// 				},
+	// 				textStyle: {
+	// 					fontSize: 0          //中间副标题字体大小
+	// 					, color: "#fff0"
+	// 				}
+	// 			},
+	// 			data: [{
+	// 				name: "佛山\n空气质量",
+	// 				value: 10
+	// 			}]
+	// 		}
+	// 		]
+	// 	};
+
+	// 	// setInterval(function () {
+	// 	//     option.series[0].data[0].value = 100;
+	// 	//     myChart.setOption(option, true);
+	// 	// },2000);
+
+	// 	function reload(resouce) {
+	// 		option.series[0].data[0].value = resouce;
+	// 		myChart.setOption(option, true);
+	// 	}
+	// 	if (option && typeof option === "object") {
+	// 		myChart.setOption(option, true);
+	// 	}
+	// }
+</script>
+
+</html>

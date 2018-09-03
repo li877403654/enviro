@@ -1,0 +1,2 @@
+include ':.dep'
+project(':.dep').projectDir = new File(settingsDir, '../.dep')

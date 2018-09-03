@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xmlns:tx="http://www.springframework.org/schema/tx"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans
+       http://www.springframework.org/schema/beans/spring-beans.xsd
+       http://www.springframework.org/schema/context
+       http://www.springframework.org/schema/context/spring-context-3.1.xsd
+       http://www.springframework.org/schema/tx
+       http://www.springframework.org/schema/tx/spring-tx-3.1.xsd"
+       default-lazy-init="true"
+>
+
+    <bean class="envir.sys.support.SysPreInitializer" lazy-init="false"/>
+
+    <!--<context:property-placeholder
+            location="classpath:sys.properties,
+            classpath:sys.local.properties"
+            ignore-resource-not-found="true"/>-->
+
+    <context:property-placeholder
+            location="classpath:sys.properties"
+            ignore-resource-not-found="true"/>
+
+    <!-- dao -->
+    <bean id="dataSource" class="com.zaxxer.hikari.HikariDataSource" destroy-method="close">
+        <property name="jdbcUrl" value="${jdbc_url}"/>
+        <property name="driverClassName" value="com.mysql.jdbc.Driver"/>
+        <property name="dataSourceProperties">
+            <props>
+                <prop key="cachePrepStmts">true</prop>
+                <prop key="prepStmtCacheSize">250</prop>
+                <prop key="prepStmtCacheSqlLimit">2048</prop>
+                <prop key="useServerPrepStmts">true</prop>
+                <prop key="useLocalSessionState">true</prop>
+                <prop key="useLocalTransactionState">true</prop>
+                <prop key="rewriteBatchedStatements">true</prop>
+                <prop key="cacheResultSetMetadata">true</prop>
+                <prop key="cacheServerConfiguration">true</prop>
+                <prop key="elideSetAutoCommits">true</prop>
+                <prop key="maintainTimeStats">false</prop>
+            </props>
+        </property>
+        <property name="minimumIdle" value="1"/>
+        <property name="maximumPoolSize" value="24"/>
+    </bean>
+
+    <bean id="txManager" class="org.springframework.jdbc.datasource.DataSourceTransactionManager">
+        <property name="dataSource" ref="dataSource"/>
+    </bean>
+
+    <tx:annotation-driven transaction-manager="txManager"/>
+    <context:annotation-config/>
+
+    <bean id="sqlSessionFactory" class="pub.dao.mybatis.support.MySqlSessionFactoryBean">
+        <property name="dataSource" ref="dataSource"/>
+        <property name="mapperLocations" value="classpath*:/sql/**/*.xml"/>
+        <property name="entityPackages" value="envir.sys.**.entity"/>
+        <!--<property name=""-->
+    </bean>
+
+    <bean id="sqlSessionTemplate" class="org.mybatis.spring.SqlSessionTemplate">
+        <constructor-arg ref="sqlSessionFactory"/>
+    </bean>
+
+    <bean id="jdbcTemplate" class="org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate">
+        <constructor-arg name="dataSource" ref="dataSource"/>
+    </bean>
+
+    <bean id="generalDao" class="pub.dao.mybatis.GeneralDaoImpl">
+        <property name="sqlSessionTemplate" ref="sqlSessionTemplate"/>
+        <property name="dataSource" ref="dataSource"/>
+        <property name="jdbcTemplate" ref="jdbcTemplate"/>
+    </bean>
+
+    <context:component-scan base-package="envir.sys,envir.utils" name-generator="pub.spring.bean.ClassNameGenerator">
+    </context:component-scan>
+
+
+</beans>
